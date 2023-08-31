@@ -16,10 +16,10 @@ async fn main() -> Result<()> {
         .into_iter()
         .filter(|x| x != "-y") // yq only arg
         .collect::<Vec<_>>();
-    debug!("args: {:?}", args);
 
     // read file input either from file or stdin
-    let input = read_input_yaml(&args.last()).await?;
+    let (input, args) = read_input_yaml(args).await?;
+    debug!("args: {:?}", args);
 
     // shellout jq with given args
     let mut child = Command::new("jq")
@@ -33,13 +33,11 @@ async fn main() -> Result<()> {
     stdin.write_all(&input).await.unwrap();
     drop(stdin);
     // then wait for exit and gather output
-    let output = child.wait_with_output().await?;
-    let stdout = output.stdout;
+    let stdout = child.wait_with_output().await?.stdout;
     // print output either as yaml or json (as per jq output)
     if yaml_output {
         let val: serde_json::Value = serde_json::from_slice(&stdout)?;
-        let ser2 = serde_yaml::to_string(&val)?;
-        println!("{}", ser2);
+        println!("{}", serde_yaml::to_string(&val)?);
     } else {
         println!("{}", String::from_utf8_lossy(&stdout));
     }
@@ -47,10 +45,13 @@ async fn main() -> Result<()> {
 }
 
 /// Convert yaml input into vector of json encoded bytes
-async fn read_input_yaml(last_arg: &Option<&String>) -> Result<Vec<u8>> {
+///
+/// if last arg is a file arg, we remove it from the args
+async fn read_input_yaml(mut args: Vec<String>) -> Result<(Vec<u8>, Vec<String>)> {
     let contents; // long lived scope for file case
-    let yaml_de = if let Some(last) = last_arg {
+    let yaml_de = if let Some(last) = args.clone().last() {
         if let Ok(true) = tokio::fs::try_exists(last).await {
+            args.pop();
             contents = tokio::fs::read_to_string(last).await?;
             serde_yaml::Deserializer::from_str(&contents)
         } else {
@@ -68,5 +69,5 @@ async fn read_input_yaml(last_arg: &Option<&String>) -> Result<Vec<u8>> {
     }
     let ser = serde_json::to_vec(&docs)?;
     debug!("decoded json: {}", String::from_utf8_lossy(&ser));
-    Ok(ser)
+    Ok((ser, args))
 }
