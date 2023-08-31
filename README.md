@@ -1,12 +1,21 @@
 # yq
 > yet another jq wrapper
 
-A Rust implementation of the common [jq](https://jqlang.github.io/jq/) wrapper; **`yq`** (not a `jq` implementation, as it depends on `jq`).
+A lightweight and portable Rust implementation of the common [jq](https://jqlang.github.io/jq/) wrapper; **`yq`** for doing arbitrary `jq` style queries on YAML documents.
 
-Born out of dissatisfaction with the existing solutions. The best current alternative is [python-yq](https://github.com/kislyuk/yq) as it preserves `jq` arguments (making it easy to learn and use), but causes huge docker containers that make it unsuitable on CI. This implementation tries to replace the functionality of the python version.
+Provides a limited, but **drop-in replacement** of [python-yq](https://github.com/kislyuk/yq) in a smaller format to allow more easily utilising the tool in a CI setting without pulling in the more sizeable python dependencies.
+
+The approach is the same;
+
+1. read YAML
+2. convert it to JSON
+3. pass it to `jq`
+4. return result
+
+Optionally the result is passed back into YAML format with `-y`.
 
 ## Usage
-Supports any query functionality [supported by jq](https://jqlang.github.io/jq/tutorial/) either via stdin:
+Currently supports any query functionality [supported by jq](https://jqlang.github.io/jq/tutorial/) either via stdin:
 
 ```sh
 $ yq '.[3].kind' -r < deployment.yaml
@@ -32,4 +41,8 @@ $ yq '.[3].metadata' -y deployment.yaml
 cargo install yjq
 ```
 
-**NB**: Depends on `jq` being installed.
+**Note**: Depends on `jq` being installed.
+
+## Limitations
+
+Only YAML is supported (no TOML / XML - PRs welcome). Shells out to `jq`. Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html)). No binary builds on CI yet.
