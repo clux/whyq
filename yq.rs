@@ -82,8 +82,10 @@ mod test {
     #[tokio::test]
     async fn stdin() -> Result<()> {
         let (data, _) = read_input_yaml(vec!["./test.yaml".into()]).await?;
-        let res = shellout(data, vec![".[2].metadata".into(), "-c".into()]).await?;
+        let res = shellout(data.clone(), vec![".[2].metadata".into(), "-c".into()]).await?;
         assert_eq!(res, "{\"name\":\"version\"}\n".to_string());
+        let res = shellout(data, vec![".[2].metadata".into(), "-y".into()]).await?;
+        assert_eq!(res, "name: version\n".to_string());
         Ok(())
     }
 }
