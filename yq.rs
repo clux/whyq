@@ -1,6 +1,5 @@
 use anyhow::Result;
-use serde_json::{self, Value};
-use serde_yaml::{self, with::singleton_map_recursive as smr};
+use serde_yaml::{self, with::singleton_map_recursive, Deserializer};
 use std::process::Stdio;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
@@ -55,21 +54,19 @@ async fn read_input_yaml(mut args: Vec<String>) -> Result<(Vec<u8>, Vec<String>)
     let contents; // long lived scope for file case
     let yaml_de = if let Some(last) = args.clone().last() {
         if let Ok(true) = tokio::fs::try_exists(last).await {
-            args.pop();
+            args.pop(); // don't pass the file arg to jq
             contents = tokio::fs::read_to_string(last).await?;
-            serde_yaml::Deserializer::from_str(&contents)
+            Deserializer::from_str(&contents)
         } else {
-            let stdin = std::io::stdin();
-            serde_yaml::Deserializer::from_reader(stdin)
+            Deserializer::from_reader(std::io::stdin())
         }
     } else {
-        let stdin = std::io::stdin();
-        serde_yaml::Deserializer::from_reader(stdin)
+        Deserializer::from_reader(std::io::stdin())
     };
 
-    let mut docs: Vec<Value> = vec![];
+    let mut docs: Vec<serde_json::Value> = vec![];
     for doc in yaml_de {
-        docs.push(smr::deserialize(doc)?);
+        docs.push(singleton_map_recursive::deserialize(doc)?);
     }
     let ser = serde_json::to_vec(&docs)?;
     debug!("decoded json: {}", String::from_utf8_lossy(&ser));
