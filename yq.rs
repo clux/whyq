@@ -10,8 +10,8 @@ use tracing::*;
 async fn main() -> Result<()> {
     tracing_subscriber::fmt().with_max_level(Level::INFO).init();
     // pass on args, skip arg 0 (which is yq)
-    let all_args = std::env::args().into_iter().skip(1).collect::<Vec<_>>();
-    let yaml_output = all_args.contains(&"-y".to_string());
+    let all_args = std::env::args().skip(1).collect::<Vec<_>>();
+    let yaml_roundtrip = all_args.contains(&"-y".to_string());
     let args = all_args
         .into_iter()
         .filter(|x| x != "-y") // yq only arg
@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
     // then wait for exit and gather output
     let stdout = child.wait_with_output().await?.stdout;
     // print output either as yaml or json (as per jq output)
-    if yaml_output {
+    if yaml_roundtrip {
         let val: serde_json::Value = serde_json::from_slice(&stdout)?;
         println!("{}", serde_yaml::to_string(&val)?);
     } else {

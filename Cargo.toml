@@ -1,7 +1,21 @@
 [package]
-name = "yq"
+name = "yjq"
+description = "yet another jq wrapper"
+authors = [
+    "clux <sszynrae@gmail.com>",
+]
 version = "0.1.0"
+license = "Apache-2.0"
+readme = "./README.md"
+repository = "https://github.com/clux/yq"
 edition = "2021"
+categories = ["command-line-utilities", "parsing"]
+
+
+[[bin]]
+doc = false
+name = "yq"
+path = "yq.rs"
 
 [dependencies]
 anyhow = "1.0.75"
