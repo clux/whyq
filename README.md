@@ -23,9 +23,9 @@ Service
 
 $ yq '.[3].metadata' -y < deployment.yaml
 labels:
-  app: version
-name: version
-namespace: default
+  app: grafana
+name: grafana
+namespace: monitoring
 ```
 
 or from a file arg (at the end):
