@@ -4,7 +4,7 @@
 # Once pushed, CI will build releases (TODO)
 
 pre-release-commit-message = "{{version}}"
-push = true
+push = false
 tag = true
 tag-name = "{{version}}"
 sign-tag = true
