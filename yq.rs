@@ -75,3 +75,15 @@ async fn read_input_yaml(mut args: Vec<String>) -> Result<(Vec<u8>, Vec<String>)
     debug!("decoded json: {}", String::from_utf8_lossy(&ser));
     Ok((ser, args))
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[tokio::test]
+    async fn stdin() -> Result<()> {
+        let (data, _) = read_input_yaml(vec!["./test.yaml".into()]).await?;
+        let res = shellout(data, vec![".[2].metadata".into(), "-c".into()]).await?;
+        assert_eq!(res, "{\"name\":\"version\"}\n".to_string());
+        Ok(())
+    }
+}
