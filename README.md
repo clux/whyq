@@ -1,9 +1,9 @@
 # yq
 > yet another jq wrapper
 
-Born out of dissatisfaction with [python yq](https://github.com/kislyuk/yq) (causes huge containers due to python requirement), and [go yq](https://github.com/mikefarah/yq) (uses flags not compatible with jq).
+A Rust implementation of the common [jq](https://jqlang.github.io/jq/) wrapper; **`yq`** (not a `jq` implementation, as it depends on `jq`).
 
-This rust implementation is basically a re-implementation of the python version; it shells out to `jq` after first converting the input to `json`
+Born out of dissatisfaction with the existing solutions. The best current alternative is [python-yq](https://github.com/kislyuk/yq) as it preserves `jq` arguments (making it easy to learn and use), but causes huge docker containers that make it unsuitable on CI. This implementation tries to replace the functionality of the python version.
 
 ## Usage
 Supports any query functionality [supported by jq](https://jqlang.github.io/jq/tutorial/) either via stdin:
