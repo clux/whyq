@@ -1,0 +1,14 @@
+# Release process
+#
+# Bump version in Cargo.toml, and create a corresponding git tag for it
+# Once pushed, CI will build releases (TODO)
+
+pre-release-commit-message = "{{version}}"
+push = true
+tag = true
+tag-name = "{{version}}"
+sign-tag = true
+sign-commit = true
+enable-all-features = true
+
+# Ref: https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md
