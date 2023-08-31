@@ -10,17 +10,22 @@ use tracing::*;
 async fn main() -> Result<()> {
     tracing_subscriber::fmt().with_max_level(Level::INFO).init();
     // pass on args, skip arg 0 (which is yq)
-    let all_args = std::env::args().skip(1).collect::<Vec<_>>();
+    let raw_args = std::env::args().skip(1).collect::<Vec<_>>();
+    // read file input either from file or stdin
+    let (input, args) = read_input_yaml(raw_args).await?;
+    let output = shellout(input, args).await?;
+    println!("{}", output);
+    Ok(())
+}
+
+async fn shellout(input: Vec<u8>, all_args: Vec<String>) -> Result<String> {
     let yaml_roundtrip = all_args.contains(&"-y".to_string());
     let args = all_args
         .into_iter()
         .filter(|x| x != "-y") // yq only arg
         .collect::<Vec<_>>();
 
-    // read file input either from file or stdin
-    let (input, args) = read_input_yaml(args).await?;
     debug!("args: {:?}", args);
-
     // shellout jq with given args
     let mut child = Command::new("jq")
         .args(args)
@@ -35,13 +40,12 @@ async fn main() -> Result<()> {
     // then wait for exit and gather output
     let stdout = child.wait_with_output().await?.stdout;
     // print output either as yaml or json (as per jq output)
-    if yaml_roundtrip {
+    Ok(if yaml_roundtrip {
         let val: serde_json::Value = serde_json::from_slice(&stdout)?;
-        println!("{}", serde_yaml::to_string(&val)?);
+        serde_yaml::to_string(&val)?
     } else {
-        println!("{}", String::from_utf8_lossy(&stdout));
-    }
-    Ok(())
+        String::from_utf8_lossy(&stdout).to_string()
+    })
 }
 
 /// Convert yaml input into vector of json encoded bytes

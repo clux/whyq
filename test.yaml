@@ -1,0 +1,99 @@
+---
+# Scoped service account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: version
+  namespace: default
+automountServiceAccountToken: true
+
+---
+# Access for the service account (cluster scoped list)
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: version
+rules:
+  - apiGroups:
+    - apps
+    resources:
+    - deployments
+    verbs:
+    - get
+    - watch
+    - list
+
+---
+# Binding the role to the account
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: version
+subjects:
+- kind: ServiceAccount
+  name: version
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: version
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Expose the http port of the service
+apiVersion: v1
+kind: Service
+metadata:
+  name: version
+  namespace: default
+  labels:
+    app: version
+spec:
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: version
+
+---
+# Main deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: version
+  namespace: default
+  labels:
+    app: version
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: version
+  template:
+    metadata:
+      labels:
+        app: version
+    spec:
+      serviceAccountName: version
+      containers:
+      - name: version
+        image: ghcr.io/kube-rs/version-rs:1.16.2
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 100Mi
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
