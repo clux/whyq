@@ -19,6 +19,7 @@ path = "yq.rs"
 
 [dependencies]
 anyhow = "1.0.75"
+clap = { version = "4.4.2", features = ["derive"] }
 serde_json = "1.0.105"
 serde_yaml = "0.9.25"
 tokio = { version = "1.32.0", features = ["macros", "fs", "process","rt-multi-thread", "io-util"] }
