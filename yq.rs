@@ -9,90 +9,100 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 struct Args {
     /// Transcode jq JSON output into YAML and emit it
-    #[arg(short = 'e', long, default_value = "false")]
+    #[arg(short = 'y', long, default_value = "false")]
     yaml_output: bool,
-    /// Arguments passed to jq
-    anonymous: Vec<String>,
+    /// Arguments passed to jq (last one might be pre-read if it's a file)
+    extra: Vec<String>,
 }
 
+impl Args {
+    async fn read_input(&mut self) -> Result<Vec<u8>> {
+        let contents;
+        let yaml_de;
+        if let Some(last) = self.extra.clone().last() {
+            if let Ok(true) = tokio::fs::try_exists(last).await {
+                self.extra.pop(); // don't pass ifle arg to jq - we read
+                contents = tokio::fs::read_to_string(last).await?;
+                yaml_de = Deserializer::from_str(&contents);
+            } else {
+                yaml_de = Deserializer::from_reader(std::io::stdin());
+            }
+        } else {
+            yaml_de = Deserializer::from_reader(std::io::stdin());
+        };
+        let mut docs: Vec<serde_json::Value> = vec![];
+        for doc in yaml_de {
+            docs.push(singleton_map_recursive::deserialize(doc)?);
+        }
+        let ser = serde_json::to_vec(&docs)?;
+        debug!("decoded json: {}", String::from_utf8_lossy(&ser));
+        Ok(ser)
+    }
+
+    /// Pass json encoded bytes to jq with arguments for jq
+    async fn shellout(&self, input: Vec<u8>) -> Result<Vec<u8>> {
+        debug!("jq args: {:?}", self.extra);
+        // shellout jq with given args
+        let mut child = Command::new("jq")
+            .args(&self.extra)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::inherit())
+            .spawn()?;
+        // pass file input as stdin
+        let mut stdin = child.stdin.take().unwrap();
+        stdin.write_all(&input).await.unwrap();
+        drop(stdin);
+        // then wait for exit and gather output
+        let stdout = child.wait_with_output().await?.stdout;
+        Ok(stdout)
+    }
+
+    // print output either as yaml or json (as per jq output)
+    fn output(&self, stdout: Vec<u8>) -> Result<String> {
+        if self.yaml_output {
+            let val: serde_json::Value = serde_json::from_slice(&stdout)?;
+            Ok(serde_yaml::to_string(&val)?)
+        } else {
+            Ok(String::from_utf8_lossy(&stdout).to_string())
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::parse();
-    println!("args: {:?}", args);
     tracing_subscriber::fmt().with_max_level(Level::INFO).init();
-    // pass on args, skip arg 0 (which is yq)
-    let yaml_roundtrip = std::env::args().any(|x| x == "-y");
-    let mut args = std::env::args().skip(1).filter(|x| x != "-y").collect::<Vec<_>>();
-    // read file input either from file or stdin
-    let input = read_input_yaml(&mut args).await?;
-    let stdout = shellout(input, &args).await?;
-
-    // print output either as yaml or json (as per jq output)
-    let output = if yaml_roundtrip {
-        let val: serde_json::Value = serde_json::from_slice(&stdout)?;
-        serde_yaml::to_string(&val)?
-    } else {
-        String::from_utf8_lossy(&stdout).to_string()
-    };
-
+    let mut args = Args::parse();
+    debug!("args: {:?}", args);
+    let input = args.read_input().await?;
+    let stdout = args.shellout(input).await?;
+    let output = args.output(stdout)?;
     println!("{}", output);
     Ok(())
-}
-
-/// Pass json encoded bytes to jq with arguments for jq
-async fn shellout(input: Vec<u8>, args: &[String]) -> Result<Vec<u8>> {
-    debug!("args: {:?}", args);
-    // shellout jq with given args
-    let mut child = Command::new("jq")
-        .args(args)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
-        .spawn()?;
-    // pass file input as stdin
-    let mut stdin = child.stdin.take().unwrap();
-    stdin.write_all(&input).await.unwrap();
-    drop(stdin);
-    // then wait for exit and gather output
-    let stdout = child.wait_with_output().await?.stdout;
-    Ok(stdout)
-}
-
-/// Convert yaml input into vector of json encoded bytes
-async fn read_input_yaml(args: &mut Vec<String>) -> Result<Vec<u8>> {
-    let contents; // long lived scope for file case
-    let yaml_de = if let Some(last) = args.clone().last() {
-        if let Ok(true) = tokio::fs::try_exists(last).await {
-            args.pop(); // don't pass the file arg to jq if we read the file
-            contents = tokio::fs::read_to_string(last).await?;
-            Deserializer::from_str(&contents)
-        } else {
-            Deserializer::from_reader(std::io::stdin())
-        }
-    } else {
-        Deserializer::from_reader(std::io::stdin())
-    };
-
-    let mut docs: Vec<serde_json::Value> = vec![];
-    for doc in yaml_de {
-        docs.push(singleton_map_recursive::deserialize(doc)?);
-    }
-    let ser = serde_json::to_vec(&docs)?;
-    debug!("decoded json: {}", String::from_utf8_lossy(&ser));
-    Ok(ser)
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    impl Args {
+        fn new(yaml: bool, args: &[&str]) -> Self {
+            Self {
+                yaml_output: yaml,
+                extra: args.into_iter().map(|x| x.to_string()).collect(),
+            }
+        }
+    }
     #[tokio::test]
-    async fn stdin() -> Result<()> {
-        let data = read_input_yaml(&mut vec!["./test.yaml".into()]).await?;
-        //let res = shellout(data.clone(), &[".[2].metadata".into(), "-c".into()]).await?;
-        //assert_eq!(String::from_utf8(res)?, "{\"name\":\"version\"}\n".to_string());
-        let res = shellout(data, &[".[2].metadata".into(), "-y".into()]).await?;
-        assert_eq!(String::from_utf8(res)?, "name: version\n".to_string());
+    async fn file_input_both_outputs() -> Result<()> {
+        let mut args = Args::new(false, &[".[2].metadata", "-c", "test.yaml"]);
+        let data = args.read_input().await?;
+        let res = args.shellout(data.clone()).await?;
+        let out = args.output(res)?;
+        assert_eq!(out, "{\"name\":\"version\"}\n");
+        args.yaml_output = true;
+        let res2 = args.shellout(data).await?;
+        let out2 = args.output(res2)?;
+        assert_eq!(out2, "name: version\n");
         Ok(())
     }
 }
