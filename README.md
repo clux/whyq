@@ -5,7 +5,7 @@ A lightweight and portable Rust implementation of the common [jq](https://jqlang
 
 Provides a limited, but **drop-in replacement** of [python-yq](https://github.com/kislyuk/yq) in a smaller format to allow more easily utilising the tool in a CI setting without pulling in the more sizeable python dependencies.
 
-The approach is the same;
+The approach is more or less the same;
 
 1. read YAML
 2. convert it to JSON
@@ -13,15 +13,16 @@ The approach is the same;
 4. return result
 
 Optionally the result is passed back into YAML format with `-y`.
+But it also allows completely arbitrary `jq` flags with a varag `--` delimiter.
 
 ## Usage
 Currently supports any query functionality [supported by jq](https://jqlang.github.io/jq/tutorial/) either via stdin:
 
 ```sh
-$ yq '.[3].kind' -r < deployment.yaml
+$ yq '.[3].kind' -- -r < deployment.yaml
 Service
 
-$ yq '.[3].metadata' -y < deployment.yaml
+$ yq -y '.[3].metadata' < deployment.yaml
 labels:
   app: grafana
 name: grafana
@@ -31,8 +32,18 @@ namespace: monitoring
 or from a file arg (at the end):
 
 ```sh
-$ yq '.[3].kind' -r deployment.yaml
-$ yq '.[3].metadata' -y deployment.yaml
+$ yq '.[3].kind' -- -r deployment.yaml
+$ yq -y '.[3].metadata' deployment.yaml
+```
+
+## Advanced Examples
+Select with nested query and raw output:
+
+```sh
+$ yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[].image' -r < test/grafana.yaml
+quay.io/kiwigrid/k8s-sidecar:1.24.6
+quay.io/kiwigrid/k8s-sidecar:1.24.6
+docker.io/grafana/grafana:10.1.0
 ```
 
 ## Installation
