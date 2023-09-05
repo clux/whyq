@@ -24,7 +24,7 @@ updates:
           - tracing*
           - log
           - env_logger
-          - atty
+          - is_terminal
       clap:
         patterns:
           - clap

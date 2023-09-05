@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use is_terminal::IsTerminal;
 use serde_yaml::{self, with::singleton_map_recursive, Deserializer};
 use std::io::{BufReader, Write};
 use std::process::{Command, Stdio};
@@ -44,8 +45,9 @@ struct Args {
 
 impl Args {
     fn read_input(&mut self) -> Result<Vec<u8>> {
-        let yaml_de = if !atty::is(atty::Stream::Stdin) {
-            Deserializer::from_reader(std::io::stdin())
+        let stdin = std::io::stdin();
+        let yaml_de = if !stdin.is_terminal() {
+            Deserializer::from_reader(stdin)
         } else if let Some(f) = self.extra.pop() {
             if !std::path::Path::new(&f).exists() {
                 Self::try_parse_from(["cmd", "-h"])?;
