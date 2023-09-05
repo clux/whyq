@@ -50,6 +50,12 @@ $ yq -y '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0]
 8000
 ```
 
+Escaping keys with slashes etc in them:
+
+```sh
+yq -y '.updates[] | select(.["package-ecosystem"] == "cargo") | .groups' .github/dependabot.yml
+```
+
 ## Argument Priority
 All arguments except output selectors such as `-y` or `-t` are passed on to `jq`.
 

@@ -5,29 +5,27 @@ use std::io::{BufReader, IsTerminal, Write};
 use std::process::{Command, Stdio};
 use tracing::*;
 
-/// Arguments and trailing varargs
+/// A lightweight and portable Rust implementation of a common jq wrapper
 ///
-/// Somewhat limited in what clap and other argparsers support, and it has forced
-/// us to separate yq args and jq args with a potential explicit separation boundary.
-/// The separation boundary is optimistic, but it needs to be explicit in some cases.
+/// Allows doing arbitrary jq style queries editing on YAML documents.
+///
+/// yq '.[3].kind' < .github/dependabot.yaml
+///
+/// yq -y '.updates[0].schedule' .github/dependabot.yml
+///
+/// yq '.spec.template.spec.containers[].image' -r
+///
+/// yq '.[].kind' -r < manifest.yml
+///
+/// yq -y '.[2].metadata' < manifest.yml
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Args {
     /// Transcode jq JSON output into YAML and emit it
-    #[arg(
-        short = 'y',
-        long,
-        default_value = "false",
-        conflicts_with = "toml_output"
-    )]
+    #[arg(short = 'y', long, default_value = "false", conflicts_with = "toml_output")]
     yaml_output: bool,
     /// Transcode jq JSON output into TOML and emit it
-    #[arg(
-        short = 't',
-        long,
-        default_value = "false",
-        conflicts_with = "yaml_output"
-    )]
+    #[arg(short = 't', long, default_value = "false", conflicts_with = "yaml_output")]
     toml_output: bool,
     /// Arguments passed to jq
     ///
@@ -100,6 +98,7 @@ impl Args {
     // print output either as yaml or json (as per jq output)
     fn output(&self, stdout: Vec<u8>) -> Result<String> {
         if self.yaml_output {
+            // NB: this can fail - particularly if people use -r or work on multidoc
             let val: serde_json::Value = serde_json::from_slice(&stdout)?;
             let data = serde_yaml::to_string(&val)?.trim_end().to_string();
             Ok(data)

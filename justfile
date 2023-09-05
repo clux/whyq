@@ -2,6 +2,9 @@
 default:
   @just --list --unsorted
 
+fmt:
+  cargo fmt
+
 test:
   #!/bin/bash
   set -euo pipefail
