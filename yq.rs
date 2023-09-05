@@ -1,8 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
-use is_terminal::IsTerminal;
 use serde_yaml::{self, with::singleton_map_recursive, Deserializer};
-use std::io::{BufReader, Write};
+use std::io::{BufReader, IsTerminal, Write};
 use std::process::{Command, Stdio};
 use tracing::*;
 

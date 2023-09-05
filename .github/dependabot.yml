@@ -24,7 +24,6 @@ updates:
           - tracing*
           - log
           - env_logger
-          - is_terminal
       clap:
         patterns:
           - clap
