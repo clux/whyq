@@ -44,7 +44,12 @@ impl Args {
         for doc in yaml_de {
             docs.push(singleton_map_recursive::deserialize(doc)?);
         }
-        let ser = serde_json::to_vec(&docs)?;
+        // if there is 1 or 0 documents, do not return as nested documents
+        let ser = match docs.as_slice() {
+            [x] => serde_json::to_vec(x)?,
+            [] => serde_json::to_vec(&serde_json::json!({}))?,
+            xs => serde_json::to_vec(xs)?,
+        };
         debug!("decoded json: {}", String::from_utf8_lossy(&ser));
         Ok(ser)
     }
