@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      serde:
+        patterns:
+          - serde
+          - serde_*
+          - serde-*
+          - toml
+      misc:
+        patterns:
+          - anyhow
+          - thiserror
+          - tracing
+          - tracing*
+          - log
+          - env_logger
+          - atty
+      clap:
+        patterns:
+          - clap
+          - clap-*
+          - clap_*
