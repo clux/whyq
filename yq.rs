@@ -76,7 +76,7 @@ impl Args {
 
     /// Pass json encoded bytes to jq with arguments for jq
     fn shellout(&self, input: Vec<u8>) -> Result<Vec<u8>> {
-        println!("jq args: {:?}", self.extra);
+        debug!("jq args: {:?}", self.extra);
         // shellout jq with given args
         let mut child = Command::new("jq")
             .args(&self.extra)
@@ -113,7 +113,7 @@ impl Args {
 fn main() -> Result<()> {
     tracing_subscriber::fmt().with_max_level(Level::INFO).init();
     let mut args = Args::try_parse()?;
-    println!("args: {:?}", args);
+    debug!("args: {:?}", args);
     let input = args.read_input()?;
     let stdout = args.shellout(input)?;
     let output = args.output(stdout)?;
