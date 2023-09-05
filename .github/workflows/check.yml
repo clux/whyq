@@ -5,6 +5,8 @@ on:
       - try/**
     tags-ignore:
       - v*.*.*
+      - '[0-9]+.[0-9]+.[0-9]+'
+
 
 name: Checks & Tests
 
@@ -37,8 +39,11 @@ jobs:
       - name: Check
         run: cargo check
 
-      - name: Install
-        run: cargo install --debug --path .
+      #- name: Install
+      #  run: cargo install --debug --path .
+      - run: cargo test
+      - run: jq --help
+      - run: cargo run -- '.[2].metadata' -c < test/deploy.yaml
 
       - name: Test
         run: just test
