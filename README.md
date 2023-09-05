@@ -8,7 +8,7 @@ A lightweight and portable Rust implementation of the common [jq](https://jqlang
 - arbitrary `jq` usage on yaml input with same syntax (we pass on most args to `jq`)
 - handle multidoc yaml input (vector of documents returned)
 - unpack yaml tags (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html))
-- allows converting `jq` output back to YAML with `-y`
+- allows converting `jq` output to YAML (`-y`) or TOML (`-t`)
 
 ## Usage
 Use as [jq](https://jqlang.github.io/jq/tutorial/) either via stdin:
@@ -61,7 +61,7 @@ yq -y -- -c '.[3].kind' < test/version.yaml # works; explicit separation
 
 ## Output Caveats
 
-Output formatting such as `-y` for YAML will require the output from `jq` to be parseable json. If you pass on `-r` for raw output, then this will not be parseable as json.
+Output formatting such as `-y` for YAML or `-t` for TOML will require the output from `jq` to be parseable json. If you pass on `-r` for raw output, then this will not be parseable as json.
 
 ## Installation
 
@@ -73,4 +73,4 @@ cargo install yjq
 
 ## Limitations
 
-Only YAML is supported (no TOML / XML - PRs welcome). Shells out to `jq`. Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html)). No binary builds on CI yet.
+Only YAML/TOML is supported (no XML - PRs welcome). Shells out to `jq`. Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html)). No binary builds on CI yet.

@@ -5,22 +5,42 @@ use std::io::{BufReader, Write};
 use std::process::{Command, Stdio};
 use tracing::*;
 
+/// Arguments and trailing varargs
+///
+/// Somewhat limited in what clap and other argparsers support, and it has forced
+/// us to separate yq args and jq args with a potential explicit separation boundary.
+/// The separation boundary is optimistic, but it needs to be explicit in some cases.
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Args {
     /// Transcode jq JSON output into YAML and emit it
-    #[arg(short = 'y', long, default_value = "false")]
+    #[arg(
+        short = 'y',
+        long,
+        default_value = "false",
+        conflicts_with = "toml_output"
+    )]
     yaml_output: bool,
-    /// Arguments passed to jq (last one might be pre-read if it's a file)
+    /// Transcode jq JSON output into TOML and emit it
+    #[arg(
+        short = 't',
+        long,
+        default_value = "false",
+        conflicts_with = "yaml_output"
+    )]
+    toml_output: bool,
+    /// Arguments passed to jq
+    ///
+    /// These arguments must be trailing and come after the flags above.
+    /// Do not join yq flags nad jq flags (such as `-yc`; use `-y -- -c`)
+    ///
+    /// If the jq args start with a flag, you **need** an **explicit** trailing vararg marker (`--`).
+    /// This is not needed if the first vararg is a jq query or a normal positional value.
+    ///
+    /// The last arg can be a file, but stdin will be preferred when present.
     #[arg(trailing_var_arg = true)]
     extra: Vec<String>,
 }
-// PROBLEM1: "-yc" combined flag fails to match flag and pass -c to varargs..
-// SOLN1: separate -y and -c with -y going first (don't see any other good solns..)
-// PROBLEM2: cannot pass flags before query
-// SOLN: pass flags after query
-// PROBLEM2 (more general): not clear where our args end and jqs arg start
-// SOLN2: allow -- as a trailing_var_arg delimiter to force everything after to jq
 
 impl Args {
     fn read_input(&mut self) -> Result<Vec<u8>> {
@@ -81,6 +101,9 @@ impl Args {
         if self.yaml_output {
             let val: serde_json::Value = serde_json::from_slice(&stdout)?;
             Ok(serde_yaml::to_string(&val)?)
+        } else if self.toml_output {
+            let val: serde_json::Value = serde_json::from_slice(&stdout)?;
+            Ok(toml::to_string(&val)?)
         } else {
             Ok(String::from_utf8_lossy(&stdout).to_string())
         }
@@ -105,6 +128,7 @@ mod test {
         fn new(yaml: bool, args: &[&str]) -> Self {
             Self {
                 yaml_output: yaml,
+                toml_output: false,
                 extra: args.into_iter().map(|x| x.to_string()).collect(),
             }
         }
