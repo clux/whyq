@@ -14,22 +14,24 @@ A lightweight and portable Rust implementation of the common [jq](https://jqlang
 Use as [jq](https://jqlang.github.io/jq/tutorial/) either via stdin:
 
 ```sh
-$ yq '.[3].kind' -r < test/version.yaml
+$ yq '.[3].kind' -r < test/deploy.yaml
 Service
 
-$ yq -y '.[3].metadata' < test/grafana.yaml
+$ yq -y '.[3].metadata' < test/deploy.yaml
 labels:
-  app: grafana
-name: grafana
-namespace: monitoring
+  app: controller
+name: controller
+namespace: default
 ```
 
 or from a file arg (at the end):
 
 ```sh
-$ yq '.[3].kind' -- -r test/version.yaml
-$ yq -y '.[3].metadata' test/version.yaml
+$ yq '.[3].kind' -r test/deploy.yaml
+$ yq -y '.[3].metadata' test/deploy.yaml
 ```
+
+Stdin is always used if it's piped to.
 
 ## Advanced Examples
 Select with nested query and raw output:
@@ -44,19 +46,21 @@ docker.io/grafana/grafana:10.1.0
 Select on multidoc:
 
 ```sh
-$ yq -y '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' test/version.yaml
+$ yq -y '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' test/deploy.yaml
 8000
 ```
 
 ## Argument Priority
 All arguments except `-y` / `--yaml-output` is passed on to `jq`.
-Sometimes `clap` gets confused about positional arguments vs options when you put a flag before the query. To explicitly specify where `jq` args begin add a `--` delimiters to the flag;
+**TL;DR: Convention**; put `yq` arguments at the front, and `jq` arguments at the back. If it still complains put a `--` to separte the arguments.
+
+**Explaination**: arg parsers are generally struggling with positional leftover arguments containing flags because they lack concepts of "our flags" and "their flags" and will try to match them together. This means combining yq and jq flags into a single arg will not work, and why a convention to explicitly separate the two args exists. Normally the separation is inferred automatically if you put a normal jq query in the middle, but if you don't have any normal positional value arg, you can put a `--` trailing vararg delimiter to indicate that all remaining flags are for `jq`;
 
 ```sh
-yq -y -c '.[3].kind' < test/version.yaml # inference fails
-yq -y '.[3].kind' -c < test/version.yaml # works
-yq -yc '.[3].kind' < test/version.yaml # unsupported combining of yq and jq args
-yq -y -- -c '.[3].kind' < test/version.yaml # works; explicit separation
+yq -y -c '.[3].kind' < test/deploy.yaml # fails; implicit separation is not detected for a flag first
+yq -y '.[3].kind' -c < test/deploy.yaml # works; implicit separation detected after positional
+yq -yc '.[3].kind' < test/deploy.yaml # fails; cannot combine of yq and jq args
+yq -y -- -c '.[3].kind' < test/deploy.yaml # works; explicit separation
 ```
 
 ## Output Caveats

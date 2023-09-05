@@ -100,12 +100,14 @@ impl Args {
     fn output(&self, stdout: Vec<u8>) -> Result<String> {
         if self.yaml_output {
             let val: serde_json::Value = serde_json::from_slice(&stdout)?;
-            Ok(serde_yaml::to_string(&val)?)
+            let data = serde_yaml::to_string(&val)?.trim_end().to_string();
+            Ok(data)
         } else if self.toml_output {
             let val: serde_json::Value = serde_json::from_slice(&stdout)?;
-            Ok(toml::to_string(&val)?)
+            Ok(toml::to_string(&val)?.trim_end().to_string())
         } else {
-            Ok(String::from_utf8_lossy(&stdout).to_string())
+            // NB: stdout here is not always json - users can pass -r to jq
+            Ok(String::from_utf8_lossy(&stdout).trim_end().to_string())
         }
     }
 }
@@ -135,15 +137,15 @@ mod test {
     }
     #[test]
     fn file_input_both_outputs() -> Result<()> {
-        let mut args = Args::new(false, &[".[2].metadata", "-c", "test/version.yaml"]);
+        let mut args = Args::new(false, &[".[2].metadata", "-c", "test/deploy.yaml"]);
         let data = args.read_input().unwrap();
         let res = args.shellout(data.clone()).unwrap();
         let out = args.output(res)?;
-        assert_eq!(out, "{\"name\":\"version\"}\n");
+        assert_eq!(out, "{\"name\":\"controller\"}");
         args.yaml_output = true;
         let res2 = args.shellout(data)?;
         let out2 = args.output(res2)?;
-        assert_eq!(out2, "name: version\n");
+        assert_eq!(out2, "name: controller");
         Ok(())
     }
 }
