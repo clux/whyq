@@ -51,8 +51,9 @@ $ yq -y '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0]
 ```
 
 ## Argument Priority
-All arguments except `-y` / `--yaml-output` is passed on to `jq`.
-**TL;DR: Convention**; put `yq` arguments at the front, and `jq` arguments at the back. If it still complains put a `--` to separte the arguments.
+All arguments except output selectors such as `-y` or `-t` are passed on to `jq`.
+
+**Convention**; put `yq` arguments at the front, and `jq` arguments at the back. If it complains put a `--` to separate the argument groups.
 
 **Explaination**: arg parsers are generally struggling with positional leftover arguments containing flags because they lack concepts of "our flags" and "their flags" and will try to match them together. This means combining yq and jq flags into a single arg will not work, and why a convention to explicitly separate the two args exists. Normally the separation is inferred automatically if you put a normal jq query in the middle, but if you don't have any normal positional value arg, you can put a `--` trailing vararg delimiter to indicate that all remaining flags are for `jq`;
 
