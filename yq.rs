@@ -139,6 +139,7 @@ mod test {
     fn file_input_both_outputs() -> Result<()> {
         let mut args = Args::new(false, &[".[2].metadata", "-c", "test/deploy.yaml"]);
         let data = args.read_input().unwrap();
+        println!("debug args: {:?}", args);
         let res = args.shellout(data.clone()).unwrap();
         let out = args.output(res)?;
         assert_eq!(out, "{\"name\":\"controller\"}");
