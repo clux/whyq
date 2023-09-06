@@ -163,6 +163,9 @@ jobs:
 
     name: Checksum and sign
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -179,10 +182,13 @@ jobs:
         run: sha512sum yq-v* | tee SHA512SUMS
 
       - uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          generate_release_notes: true
+          draft: true
+          fail_on_unmatched_files: true
           files: |
             yq-v*.tar.xz
             yq-v*.zip
             *SUMS*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
