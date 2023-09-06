@@ -9,6 +9,7 @@ license = "Apache-2.0"
 readme = "./README.md"
 repository = "https://github.com/clux/yq"
 edition = "2021"
+rust-version = "1.70.0"
 categories = ["command-line-utilities", "parsing"]
 
 
