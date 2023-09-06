@@ -3,6 +3,8 @@
 @test "stdin_or_file" {
   run yq -y '.[2].kind' < test/deploy.yaml
   echo "$output" && echo "$output" | grep "ClusterRoleBinding"
+
+  yq -y '.[2].kind' test/deploy.yaml
   run yq -y '.[2].kind' test/deploy.yaml
   echo "$output" && echo "$output" | grep "ClusterRoleBinding"
 }
@@ -13,6 +15,7 @@
 }
 
 @test "nested_select" {
+    RUST_LOG=debug yq -y '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' test/deploy.yaml
     run yq -y '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' test/deploy.yaml
     echo "$output" && echo "$output" | grep "8000"
 }
