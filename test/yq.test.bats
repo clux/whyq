@@ -20,20 +20,29 @@
 }
 
 @test "nested_select" {
-    run yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' -r < test/deploy.yaml
-    echo "$output" && echo "$output" | grep "8000"
+  run yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' -r < test/deploy.yaml
+  echo "$output" && echo "$output" | grep "8000"
 }
 
 @test "nested_select_json" {
-    run yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].readinessProbe' -c < test/deploy.yaml
-    echo "$output" && echo "$output" | grep '{"httpGet":{"path":"/health","port":"http"},"initialDelaySeconds":5,"periodSeconds":5}'
+  run yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].readinessProbe' -c < test/deploy.yaml
+  echo "$output" && echo "$output" | grep '{"httpGet":{"path":"/health","port":"http"},"initialDelaySeconds":5,"periodSeconds":5}'
 
-    run yq '.spec.template.spec.containers[].image' -r < test/grafana.yaml
+  run yq '.spec.template.spec.containers[].image' -r < test/grafana.yaml
 }
 
 @test "jq_compat" {
-    cat test/deploy.yaml | yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].readinessProbe' -c > test/output.json
-    run jq ".httpGet.path" test/output.json
-    echo "$output" && echo "$output" | grep '"/health"'
-    rm test/output.json
+  cat test/deploy.yaml | yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].readinessProbe' -c > test/output.json
+  run jq ".httpGet.path" test/output.json
+  echo "$output" && echo "$output" | grep '"/health"'
+  rm test/output.json
+}
+
+@test "exit_codes" {
+  run yq -h
+  [ "$status" -eq 0 ]
+  run yq --help
+  [ "$status" -eq 0 ]
+  run yq
+  [ "$status" -eq 1 ]
 }
