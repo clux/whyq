@@ -69,7 +69,7 @@ impl Args {
             [] => serde_json::to_vec(&serde_json::json!({}))?,
             xs => serde_json::to_vec(xs)?,
         };
-        trace!("decoded json: {}", String::from_utf8_lossy(&ser));
+        debug!("decoded json: {}", String::from_utf8_lossy(&ser));
         Ok(ser)
     }
 
@@ -92,7 +92,7 @@ impl Args {
         if !output.status.success() {
             anyhow::bail!("arguments rejected by jq: {}", output.status);
         }
-        trace!("jq stdout: {}", String::from_utf8_lossy(&output.stdout));
+        debug!("jq stdout: {}", String::from_utf8_lossy(&output.stdout));
         Ok(output.stdout)
     }
 
@@ -113,8 +113,18 @@ impl Args {
     }
 }
 
+fn default_tracing_from_env() {
+    use tracing_subscriber::{Registry, EnvFilter, layer::SubscriberExt};
+    let logger = tracing_subscriber::fmt::layer().compact().with_writer(std::io::stderr);
+    let env_filter = EnvFilter::try_from_default_env()
+        .or_else(|_| EnvFilter::try_new("info"))
+        .unwrap();
+    let collector = Registry::default().with(logger).with(env_filter);
+    tracing::subscriber::set_global_default(collector).unwrap();
+}
+
 fn main() -> Result<()> {
-    tracing_subscriber::fmt().with_writer(std::io::stderr).init();
+    default_tracing_from_env();
     let mut args = Args::try_parse()?;
     debug!("args: {:?}", args);
     let input = args.read_input()?;
@@ -138,6 +148,7 @@ mod test {
     }
     #[test]
     fn file_input_both_outputs() -> Result<()> {
+        default_tracing_from_env();
         let mut args = Args::new(false, &[".[2].metadata", "-c", "test/deploy.yaml"]);
         println!("have stdin? {}", !std::io::stdin().is_terminal());
         let data = args.read_input().unwrap();
