@@ -19,6 +19,8 @@ or download a prebuilt from [releases](https://github.com/clux/yq/releases) eith
 cargo binstall yjq
 ```
 
+**Note**: Depends on `jq` being installed.
+
 ## Features
 
 - arbitrary `jq` usage on yaml input with same syntax (we pass on most args to `jq`)
@@ -90,13 +92,6 @@ yq -y -- -c '.[3].kind' < test/deploy.yaml # works; explicit separation
 
 Output formatting such as `-y` for YAML or `-t` for TOML will require the output from `jq` to be parseable json. If you pass on `-r` for raw output, then this will not be parseable as json.
 
-## Installation
-
-```sh
-cargo install yjq
-```
-
-**Note**: Depends on `jq` being installed.
 
 ## Limitations
 
