@@ -122,8 +122,8 @@ jobs:
           bin="target/${{ matrix.target }}/release/yq${ext}"
           strip "$bin" || true
 
-          version=$(cat VERSION)
-          dst="yq-v${version}-${{ matrix.target }}"
+          #version=$(cat VERSION)
+          dst="yq-${{ matrix.target }}"
           mkdir "$dst"
 
           mkdir -p "target/release"
@@ -138,16 +138,14 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          version=$(cat VERSION)
-          dst="yq-v${version}-${{ matrix.target }}"
+          dst="yq-${{ matrix.target }}"
           tar cavf "$dst.tar.xz" "$dst"
       - name: Archive (zip)
         if: startsWith(matrix.name, 'windows-')
         shell: bash
         run: |
           set -euxo pipefail
-          version=$(cat VERSION)
-          dst="yq-v${version}-${{ matrix.target }}"
+          dst="yq-${{ matrix.target }}"
           7z a "$dst.zip" "$dst"
 
       - uses: actions/upload-artifact@v3
@@ -155,8 +153,8 @@ jobs:
           name: builds
           retention-days: 1
           path: |
-            yq-v*.tar.xz
-            yq-v*.zip
+            yq-*.tar.xz
+            yq-*.zip
 
   sign:
     needs: build
@@ -179,7 +177,7 @@ jobs:
           name: builds
 
       - name: Checksums with SHA512
-        run: sha512sum yq-v* | tee SHA512SUMS
+        run: sha512sum yq-* | tee SHA512SUMS
 
       - uses: softprops/action-gh-release@v1
         env:
@@ -189,6 +187,6 @@ jobs:
           #draft: true
           fail_on_unmatched_files: true
           files: |
-            yq-v*.tar.xz
-            yq-v*.zip
+            yq-*.tar.xz
+            yq-*.zip
             *SUMS*
