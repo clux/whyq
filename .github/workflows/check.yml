@@ -13,6 +13,7 @@ name: Checks & Tests
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: full
+  RUST_LOG: trace
 
 jobs:
   check-and-test:
@@ -40,8 +41,8 @@ jobs:
 
       #- run: cargo check
       -  run: cargo install --debug --path .
-      - run: RUST_LOG=debug cargo test -- --nocapture
-      - run: RUST_LOG=debug bats test/*.bats
+      - run: cargo test -- --nocapture
+      - run: bats test/*.bats
 
       - name: Clippy
         if: matrix.toolchain == 'stable'
