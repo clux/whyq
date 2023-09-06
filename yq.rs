@@ -32,7 +32,7 @@ struct Args {
     /// These arguments must be trailing and come after the flags above.
     /// Do not join yq flags nad jq flags (such as `-yc`; use `-y -- -c`)
     ///
-    /// If the jq args start with a flag, you **need** an **explicit** trailing vararg marker (`--`).
+    /// If the jq args start with a flag, you need an explicit trailing vararg marker (--).
     /// This is not needed if the first vararg is a jq query or a normal positional value.
     ///
     /// The last arg can be a file, but stdin will be preferred when present.
@@ -116,8 +116,10 @@ impl Args {
 }
 
 fn default_tracing_from_env() {
-    use tracing_subscriber::{Registry, EnvFilter, layer::SubscriberExt};
-    let logger = tracing_subscriber::fmt::layer().compact().with_writer(std::io::stderr);
+    use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
+    let logger = tracing_subscriber::fmt::layer()
+        .compact()
+        .with_writer(std::io::stderr);
     let env_filter = EnvFilter::try_from_default_env()
         .or_else(|_| EnvFilter::try_new("info"))
         .unwrap();

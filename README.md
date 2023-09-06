@@ -3,6 +3,20 @@
 
 A lightweight and portable Rust implementation of the common [jq](https://jqlang.github.io/jq/) wrapper; **`yq`** for doing arbitrary `jq` style queries on YAML documents.
 
+## Installation
+
+Via cargo:
+
+```sh
+cargo install yjq
+```
+
+or download a prebuilt from [releases](https://github.com/clux/yq/releases) either manually, or via [binstall](https://github.com/cargo-bins/cargo-binstall):
+
+```sh
+cargo binstall yjq
+```
+
 ## Features
 
 - arbitrary `jq` usage on yaml input with same syntax (we pass on most args to `jq`)
