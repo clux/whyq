@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use serde_yaml::{self, with::singleton_map_recursive, Deserializer};
-use std::io::{BufReader, IsTerminal, Write};
+use std::io::{stderr, stdin, BufReader, IsTerminal, Write};
 use std::process::{Command, Stdio};
 use tracing::*;
 
@@ -42,10 +42,9 @@ struct Args {
 
 impl Args {
     fn read_input(&mut self) -> Result<Vec<u8>> {
-        let stdin = std::io::stdin();
-        let yaml_de = if !stdin.is_terminal() && !cfg!(test) {
+        let yaml_de = if !stdin().is_terminal() && !cfg!(test) {
             debug!("reading from stdin");
-            Deserializer::from_reader(stdin)
+            Deserializer::from_reader(stdin())
         } else if let Some(f) = self.extra.pop() {
             if !std::path::Path::new(&f).exists() {
                 Self::try_parse_from(["cmd", "-h"])?;
@@ -117,9 +116,7 @@ impl Args {
 
 fn default_tracing_from_env() {
     use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
-    let logger = tracing_subscriber::fmt::layer()
-        .compact()
-        .with_writer(std::io::stderr);
+    let logger = tracing_subscriber::fmt::layer().compact().with_writer(stderr);
     let env_filter = EnvFilter::try_from_default_env()
         .or_else(|_| EnvFilter::try_new("info"))
         .unwrap();
