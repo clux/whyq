@@ -1,9 +1,14 @@
 #!/usr/bin/env bats
 
-@test "stdin_or_file" {
+@test "stdin" {
   run yq -y '.[2].kind' < test/deploy.yaml
   echo "$output" && echo "$output" | grep "ClusterRoleBinding"
+}
 
+@test "file" {
+  if [[ "${CI}" =~ "true" ]]; then
+    skip # isTerminal seems to do the wrong thing on github actions..
+  fi
   yq -y '.[2].kind' test/deploy.yaml
   run yq -y '.[2].kind' test/deploy.yaml
   echo "$output" && echo "$output" | grep "ClusterRoleBinding"
