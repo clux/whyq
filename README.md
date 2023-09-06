@@ -1,4 +1,6 @@
 # yq
+[![CI](https://github.com/clux/yq/actions/workflows/release.yml/badge.svg)](https://github.com/clux/yq/actions/workflows/release.yml)
+[![Crates.io](https://img.shields.io/crates/v/yjq.svg)](https://crates.io/crates/yjq)
 > yet another jq wrapper
 
 A lightweight and portable Rust implementation of the common [jq](https://jqlang.github.io/jq/) wrapper; **`yq`** for doing arbitrary `jq` style queries on YAML documents.
