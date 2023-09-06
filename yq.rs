@@ -129,7 +129,7 @@ fn default_tracing_from_env() {
 
 fn main() -> Result<()> {
     default_tracing_from_env();
-    let mut args = Args::try_parse()?;
+    let mut args = Args::parse();
     debug!("args: {:?}", args);
     let input = args.read_input()?;
     let stdout = args.shellout(input)?;
