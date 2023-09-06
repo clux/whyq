@@ -6,7 +6,7 @@ fmt:
   cargo fmt
 
 test:
-  #!/bin/bash
+  #!/usr/bin/env bash
   set -euo pipefail
   export RUST_LOG=debug
   [[ $(yq -y '.[2].kind' < test/deploy.yaml) = "ClusterRoleBinding" ]]
