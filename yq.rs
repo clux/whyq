@@ -114,18 +114,16 @@ impl Args {
     }
 }
 
-fn default_tracing_from_env() {
+fn init_env_tracing_stderr() -> Result<()> {
     use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
     let logger = tracing_subscriber::fmt::layer().compact().with_writer(stderr);
-    let env_filter = EnvFilter::try_from_default_env()
-        .or_else(|_| EnvFilter::try_new("info"))
-        .unwrap();
+    let env_filter = EnvFilter::try_from_default_env().or(EnvFilter::try_new("info"))?;
     let collector = Registry::default().with(logger).with(env_filter);
-    tracing::subscriber::set_global_default(collector).unwrap();
+    Ok(tracing::subscriber::set_global_default(collector)?)
 }
 
 fn main() -> Result<()> {
-    default_tracing_from_env();
+    init_env_tracing_stderr()?;
     let mut args = Args::parse();
     debug!("args: {:?}", args);
     let input = args.read_input()?;
@@ -149,7 +147,7 @@ mod test {
     }
     #[test]
     fn file_input_both_outputs() -> Result<()> {
-        default_tracing_from_env();
+        init_env_tracing_stderr()?;
         let mut args = Args::new(false, &[".[2].metadata", "-c", "test/deploy.yaml"]);
         println!("have stdin? {}", !std::io::stdin().is_terminal());
         let data = args.read_input().unwrap();
