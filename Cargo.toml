@@ -9,6 +9,7 @@ license = "Apache-2.0"
 readme = "./README.md"
 repository = "https://github.com/clux/yq"
 edition = "2021"
+rust-version = "1.70.0"
 categories = ["command-line-utilities", "parsing"]
 
 
@@ -24,4 +25,4 @@ serde_json = "1.0.105"
 toml = { version = "0.7.6", features = ["display"] }
 serde_yaml = "0.9.25"
 tracing = "0.1.37"
-tracing-subscriber = "0.3.17"
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }

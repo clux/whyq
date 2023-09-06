@@ -43,7 +43,8 @@ struct Args {
 impl Args {
     fn read_input(&mut self) -> Result<Vec<u8>> {
         let stdin = std::io::stdin();
-        let yaml_de = if !stdin.is_terminal() {
+        let yaml_de = if !stdin.is_terminal() && !cfg!(test) {
+            debug!("reading from stdin");
             Deserializer::from_reader(stdin)
         } else if let Some(f) = self.extra.pop() {
             if !std::path::Path::new(&f).exists() {
@@ -63,6 +64,7 @@ impl Args {
         for doc in yaml_de {
             docs.push(singleton_map_recursive::deserialize(doc)?);
         }
+        debug!("found {} documents", docs.len());
         // if there is 1 or 0 documents, do not return as nested documents
         let ser = match docs.as_slice() {
             [x] => serde_json::to_vec(x)?,
@@ -92,6 +94,7 @@ impl Args {
         if !output.status.success() {
             anyhow::bail!("arguments rejected by jq: {}", output.status);
         }
+        debug!("jq stdout: {}", String::from_utf8_lossy(&output.stdout));
         Ok(output.stdout)
     }
 
@@ -112,8 +115,18 @@ impl Args {
     }
 }
 
+fn default_tracing_from_env() {
+    use tracing_subscriber::{Registry, EnvFilter, layer::SubscriberExt};
+    let logger = tracing_subscriber::fmt::layer().compact().with_writer(std::io::stderr);
+    let env_filter = EnvFilter::try_from_default_env()
+        .or_else(|_| EnvFilter::try_new("info"))
+        .unwrap();
+    let collector = Registry::default().with(logger).with(env_filter);
+    tracing::subscriber::set_global_default(collector).unwrap();
+}
+
 fn main() -> Result<()> {
-    tracing_subscriber::fmt().with_max_level(Level::INFO).init();
+    default_tracing_from_env();
     let mut args = Args::try_parse()?;
     debug!("args: {:?}", args);
     let input = args.read_input()?;
@@ -137,8 +150,11 @@ mod test {
     }
     #[test]
     fn file_input_both_outputs() -> Result<()> {
+        default_tracing_from_env();
         let mut args = Args::new(false, &[".[2].metadata", "-c", "test/deploy.yaml"]);
+        println!("have stdin? {}", !std::io::stdin().is_terminal());
         let data = args.read_input().unwrap();
+        println!("debug args: {:?}", args);
         let res = args.shellout(data.clone()).unwrap();
         let out = args.output(res)?;
         assert_eq!(out, "{\"name\":\"controller\"}");
