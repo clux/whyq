@@ -15,7 +15,7 @@
 }
 
 @test "nested_select" {
-    run yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' -r test/deploy.yaml
+    run yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' -r < test/deploy.yaml
     echo "$output" && echo "$output" | grep "8000"
 }
 
