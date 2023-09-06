@@ -84,12 +84,6 @@ jobs:
         with:
           path: ~/.cargo/bin
           key: ${{ runner.os }}-cargo-bin-${{ hashFiles('.github/workflows/release.yml') }}
-      - name: Install cargo-deb
-        if: startsWith(matrix.name, 'linux-')
-        run: which cargo-deb || cargo install cargo-deb --version 1.30.0 --locked
-      - name: Install cargo-generate-rpm
-        if: startsWith(matrix.name, 'linux-')
-        run: which cargo-generate-rpm || cargo install cargo-generate-rpm --version 0.5.0 --locked
 
       - uses: actions-rs/toolchain@v1
         with:
@@ -147,24 +141,6 @@ jobs:
           version=$(cat VERSION)
           dst="yq-v${version}-${{ matrix.target }}"
           tar cavf "$dst.tar.xz" "$dst"
-      - name: Archive (deb)
-        if: startsWith(matrix.name, 'linux-')
-        shell: bash
-        run: |
-          set -euxo pipefail
-          version=$(cat VERSION)
-          dst="yq-v${version}-${{ matrix.target }}"
-          cargo deb --no-build --no-strip --target ${{ matrix.target }} --output "$dst.deb"
-      - name: Archive (rpm)
-        if: startsWith(matrix.name, 'linux-')
-        shell: bash
-        run: |
-          set -euxo pipefail
-          shopt -s globstar
-          version=$(cat VERSION)
-          dst="yq-v${version}-${{ matrix.target }}"
-          cargo generate-rpm --target "${{ matrix.target }}"
-          mv target/**/*.rpm "$dst.rpm"
       - name: Archive (zip)
         if: startsWith(matrix.name, 'windows-')
         shell: bash
@@ -180,9 +156,6 @@ jobs:
           retention-days: 1
           path: |
             yq-v*.tar.xz
-            yq-v*.tar.zst
-            yq-v*.deb
-            yq-v*.rpm
             yq-v*.zip
 
   sign:
@@ -209,9 +182,6 @@ jobs:
         with:
           files: |
             yq-v*.tar.xz
-            yq-v*.tar.zst
-            yq-v*.deb
-            yq-v*.rpm
             yq-v*.zip
             *SUMS*
         env:
