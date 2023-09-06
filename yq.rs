@@ -44,6 +44,7 @@ impl Args {
     fn read_input(&mut self) -> Result<Vec<u8>> {
         let stdin = std::io::stdin();
         let yaml_de = if !stdin.is_terminal() && !cfg!(test) {
+            debug!("reading from stdin");
             Deserializer::from_reader(stdin)
         } else if let Some(f) = self.extra.pop() {
             if !std::path::Path::new(&f).exists() {
@@ -63,6 +64,7 @@ impl Args {
         for doc in yaml_de {
             docs.push(singleton_map_recursive::deserialize(doc)?);
         }
+        debug!("found {} documents", docs.len());
         // if there is 1 or 0 documents, do not return as nested documents
         let ser = match docs.as_slice() {
             [x] => serde_json::to_vec(x)?,
