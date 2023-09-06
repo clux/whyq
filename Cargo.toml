@@ -32,4 +32,5 @@ lto = true
 panic = "abort"
 
 [package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/{ version }/yq-v{ version }-{ target }{ archive-suffix }"
 bin-dir = "yq-v{ version }-{ target }/{ bin }{ format }"
