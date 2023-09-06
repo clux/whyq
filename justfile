@@ -7,8 +7,9 @@ fmt:
 
 test:
   #!/usr/bin/env bash
-  set -euo pipefail
+  set -exuo pipefail
   export RUST_LOG=debug
+  yq -y '.[2].kind' < test/deploy.yaml
   [[ $(yq -y '.[2].kind' < test/deploy.yaml) = "ClusterRoleBinding" ]]
   [[ $(yq -y '.[2].kind' test/deploy.yaml) = "ClusterRoleBinding" ]]
   [[ $(yq '.[2].metadata' -c < test/deploy.yaml) = '{"name":"controller"}' ]]
