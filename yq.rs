@@ -69,7 +69,7 @@ impl Args {
             [] => serde_json::to_vec(&serde_json::json!({}))?,
             xs => serde_json::to_vec(xs)?,
         };
-        debug!("decoded json: {}", String::from_utf8_lossy(&ser));
+        trace!("decoded json: {}", String::from_utf8_lossy(&ser));
         Ok(ser)
     }
 
@@ -92,6 +92,7 @@ impl Args {
         if !output.status.success() {
             anyhow::bail!("arguments rejected by jq: {}", output.status);
         }
+        trace!("jq stdout: {}", String::from_utf8_lossy(&output.stdout));
         Ok(output.stdout)
     }
 

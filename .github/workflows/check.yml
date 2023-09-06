@@ -45,6 +45,8 @@ jobs:
       - run: yq '.[2].metadata' < test/deploy.yaml || true
       - run: yq '.[2].metadata' -c < test/deploy.yaml || true
       - run: RUST_LOG=debug cargo test -- --nocapture || true
+      - RUN: RUST_LOG=trace yq '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' -r test/deploy.yaml || true
+      - RUN: RUST_LOG=trace yq -y '.[] | select(.kind == "Deployment") | .spec.template.spec.containers[0].ports[0].containerPort' test/deploy.yaml || true
       - run: RUST_LOG=debug bats test/*.bats
 
       - name: Clippy
