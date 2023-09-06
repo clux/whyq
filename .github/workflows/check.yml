@@ -12,7 +12,7 @@ name: Checks & Tests
 
 env:
   CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
+  RUST_BACKTRACE: full
 
 jobs:
   check-and-test:
@@ -46,7 +46,7 @@ jobs:
       - run: jq --help || true
       - run: cargo run -- '.[2].metadata' < test/deploy.yaml || true
       - run: cargo run -- '.[2].metadata' -c < test/deploy.yaml || true
-      - run: cargo test || true
+      - run: RUST_LOG=debug cargo test -- --nocapture || true
 
       - name: Test
         run: just test
