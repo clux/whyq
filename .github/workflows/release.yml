@@ -186,7 +186,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           generate_release_notes: true
-          draft: true
+          #draft: true
           fail_on_unmatched_files: true
           files: |
             yq-v*.tar.xz
