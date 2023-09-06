@@ -43,7 +43,7 @@ struct Args {
 impl Args {
     fn read_input(&mut self) -> Result<Vec<u8>> {
         let stdin = std::io::stdin();
-        let yaml_de = if !stdin.is_terminal() {
+        let yaml_de = if !stdin.is_terminal() && !cfg!(test) {
             Deserializer::from_reader(stdin)
         } else if let Some(f) = self.extra.pop() {
             if !std::path::Path::new(&f).exists() {
@@ -138,6 +138,7 @@ mod test {
     #[test]
     fn file_input_both_outputs() -> Result<()> {
         let mut args = Args::new(false, &[".[2].metadata", "-c", "test/deploy.yaml"]);
+        println!("have stdin? {}", !std::io::stdin().is_terminal());
         let data = args.read_input().unwrap();
         println!("debug args: {:?}", args);
         let res = args.shellout(data.clone()).unwrap();

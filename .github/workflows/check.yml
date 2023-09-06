@@ -40,12 +40,11 @@ jobs:
       - name: Check
         run: cargo check
 
-      #- name: Install
-      #  run: cargo install --debug --path .
+      -  run: cargo install --debug --path .
       #- run: cargo test ||
       - run: jq --help || true
-      - run: cargo run -- '.[2].metadata' < test/deploy.yaml || true
-      - run: cargo run -- '.[2].metadata' -c < test/deploy.yaml || true
+      - run: yq '.[2].metadata' < test/deploy.yaml || true
+      - run: yq '.[2].metadata' -c < test/deploy.yaml || true
       - run: RUST_LOG=debug cargo test -- --nocapture || true
 
       - name: Test
