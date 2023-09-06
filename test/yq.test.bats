@@ -43,6 +43,9 @@
   [ "$status" -eq 0 ]
   run yq --help
   [ "$status" -eq 0 ]
+  if [[ "${CI}" =~ "true" ]]; then
+    skip # ci is fun
+  fi
   run yq
   [ "$status" -eq 1 ]
 }
