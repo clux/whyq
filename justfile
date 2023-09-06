@@ -8,6 +8,7 @@ fmt:
 test:
   #!/bin/bash
   set -euo pipefail
+  export RUST_LOG=debug
   [[ $(cargo run -- -y '.[2].kind' < test/deploy.yaml) = "ClusterRoleBinding" ]]
   [[ $(cargo run -- -y '.[2].kind' test/deploy.yaml) = "ClusterRoleBinding" ]]
   [[ $(cargo run -- '.[2].metadata' -c < test/deploy.yaml) = '{"name":"controller"}' ]]
