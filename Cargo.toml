@@ -32,4 +32,4 @@ lto = true
 panic = "abort"
 
 [package.metadata.binstall]
-bin-dir = "{ name }-v{ version }-{ target }/{ bin }{ format }"
+bin-dir = "yq-v{ version }-{ target }/{ bin }{ format }"
