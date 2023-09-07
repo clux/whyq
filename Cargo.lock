@@ -490,6 +490,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 
 [[package]]
+name = "whyq"
+version = "0.3.6"
+dependencies = [
+ "anyhow",
+ "clap",
+ "serde_json",
+ "serde_yaml",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "winapi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -584,17 +597,4 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c2e3184b9c4e92ad5167ca73039d0c42476302ab603e2fec4487511f38ccefc"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "yjq"
-version = "0.3.6"
-dependencies = [
- "anyhow",
- "clap",
- "serde_json",
- "serde_yaml",
- "toml",
- "tracing",
- "tracing-subscriber",
 ]

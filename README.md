@@ -1,6 +1,6 @@
 # yq
 [![CI](https://github.com/clux/yq/actions/workflows/release.yml/badge.svg)](https://github.com/clux/yq/actions/workflows/release.yml)
-[![Crates.io](https://img.shields.io/crates/v/yjq.svg)](https://crates.io/crates/yjq)
+[![Crates.io](https://img.shields.io/crates/v/whyq.svg)](https://crates.io/crates/whyq)
 > yet another jq wrapper
 
 A lightweight and portable Rust implementation of the common [jq](https://jqlang.github.io/jq/) wrapper; **`yq`** for doing arbitrary `jq` style queries on YAML documents.
@@ -10,16 +10,16 @@ A lightweight and portable Rust implementation of the common [jq](https://jqlang
 Via cargo:
 
 ```sh
-cargo install yjq
+cargo install whyq
 ```
 
 or download a prebuilt from [releases](https://github.com/clux/yq/releases) either manually, or via [binstall](https://github.com/cargo-bins/cargo-binstall):
 
 ```sh
-cargo binstall yjq
+cargo binstall whyq
 ```
 
-**Note**: Depends on `jq` being installed.
+**Note**: Depends on `jq` being installed, and `provides` the `yq` binary.
 
 ## Features
 

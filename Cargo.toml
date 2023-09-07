@@ -1,5 +1,5 @@
 [package]
-name = "yjq"
+name = "whyq"
 description = "yet another jq wrapper"
 authors = [
     "clux <sszynrae@gmail.com>",
