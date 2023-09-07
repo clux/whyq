@@ -1,4 +1,4 @@
-# yq
+# whyq - low overhead yq implementation
 [![CI](https://github.com/clux/yq/actions/workflows/release.yml/badge.svg)](https://github.com/clux/yq/actions/workflows/release.yml)
 [![Crates.io](https://img.shields.io/crates/v/whyq.svg)](https://crates.io/crates/whyq)
 > yet another jq wrapper
@@ -24,7 +24,8 @@ cargo binstall whyq
 ## Features
 
 - arbitrary `jq` usage on yaml input with same syntax (we pass on most args to `jq`)
-- handle multidoc yaml input (vector of documents returned)
+- generally functions as a drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (e.g. provides: yq)
+- handle multidoc yaml input (vector of documents returned when multiple docs found)
 - unpack yaml tags (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html))
 - allows converting `jq` output to YAML (`-y`) or TOML (`-t`)
 
