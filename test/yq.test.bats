@@ -49,3 +49,11 @@
   run yq
   [ "$status" -eq 1 ]
 }
+
+@test "toml" {
+  run yq -i=toml -y '.package.edition' -r < Cargo.toml
+  echo "$output" && echo "$output" | grep '2021'
+
+  run yq -i=toml '.dependencies.clap.features' -c < Cargo.toml
+  echo "$output" && echo "$output" | grep '["cargo","derive"]'
+}

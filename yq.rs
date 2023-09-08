@@ -1,9 +1,16 @@
 use anyhow::Result;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use serde_yaml::{self, with::singleton_map_recursive, Deserializer};
-use std::io::{stderr, stdin, BufReader, IsTerminal, Write};
+use std::io::{stderr, stdin, BufReader, IsTerminal, Read, Write};
 use std::process::{Command, Stdio};
 use tracing::*;
+
+#[derive(Copy, Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Input {
+    #[default]
+    Yaml,
+    Toml,
+}
 
 /// A lightweight and portable Rust implementation of a common jq wrapper
 ///
@@ -27,6 +34,10 @@ struct Args {
     /// Transcode jq JSON output into TOML and emit it
     #[arg(short = 't', long, default_value = "false", conflicts_with = "yaml_output")]
     toml_output: bool,
+    /// Input format
+    #[arg(short = 'i', long, value_enum, default_value_t)]
+    input: Input,
+
     /// Arguments passed to jq
     ///
     /// These arguments must be trailing and come after the flags above.
@@ -41,7 +52,7 @@ struct Args {
 }
 
 impl Args {
-    fn read_input(&mut self) -> Result<Vec<u8>> {
+    fn read_yaml(&mut self) -> Result<Vec<u8>> {
         let yaml_de = if !stdin().is_terminal() && !cfg!(test) {
             debug!("reading from stdin");
             Deserializer::from_reader(stdin())
@@ -70,7 +81,36 @@ impl Args {
             [] => serde_json::to_vec(&serde_json::json!({}))?,
             xs => serde_json::to_vec(xs)?,
         };
-        debug!("decoded json: {}", String::from_utf8_lossy(&ser));
+        Ok(ser)
+    }
+    fn read_toml(&mut self) -> Result<Vec<u8>> {
+        use toml::Table;
+        let mut buf = String::new();
+        let toml_str = if !stdin().is_terminal() && !cfg!(test) {
+            debug!("reading from stdin");
+            stdin().read_to_string(&mut buf)?;
+            buf
+        } else if let Some(f) = self.extra.pop() {
+            if !std::path::Path::new(&f).exists() {
+                Self::try_parse_from(["cmd", "-h"])?;
+                std::process::exit(2);
+            }
+            let data = std::fs::read_to_string(f)?;
+            data
+        } else {
+            Self::try_parse_from(["cmd", "-h"])?;
+            std::process::exit(2);
+        };
+        let doc: Table = toml_str.parse()?;
+        let doc_as: serde_json::Value = doc.try_into()?;
+        Ok(serde_json::to_vec(&doc_as)?)
+    }
+    fn read_input(&mut self) -> Result<Vec<u8>> {
+        let ser = match self.input {
+            Input::Yaml => self.read_yaml()?,
+            Input::Toml => self.read_toml()?,
+        };
+        debug!("input decoded as json: {}", String::from_utf8_lossy(&ser));
         Ok(ser)
     }
 
@@ -141,6 +181,7 @@ mod test {
             Self {
                 yaml_output: yaml,
                 toml_output: false,
+                input: Input::Yaml,
                 extra: args.into_iter().map(|x| x.to_string()).collect(),
             }
         }

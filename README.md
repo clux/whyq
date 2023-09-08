@@ -2,8 +2,7 @@
 [![CI](https://github.com/clux/yq/actions/workflows/release.yml/badge.svg)](https://github.com/clux/yq/actions/workflows/release.yml)
 [![Crates.io](https://img.shields.io/crates/v/whyq.svg)](https://crates.io/crates/whyq)
 
-A lightweight and portable Rust implementation of the common [jq](https://jqlang.github.io/jq/) wrapper; **`yq`** for doing arbitrary `jq` style queries on YAML documents.
-
+A lightweight and portable [jq](https://jqlang.github.io/jq/) wrapper written in Rust for doing arbitrary `jq` queries on **YAML** or **TOML** documents by transcoding through **JSON**.
 ## Installation
 
 Via cargo:
@@ -22,9 +21,10 @@ cargo binstall whyq
 
 ## Features
 
-- arbitrary `jq` usage on yaml input with same syntax (we pass on most args to `jq`)
+- arbitrary `jq` usage on yaml/toml input with same syntax (we pass on args to `jq` along with json converted input)
 - generally functions as a drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (e.g. provides: yq)
-- handle multidoc yaml input (vector of documents returned when multiple docs found)
+- handles multidoc **yaml** input (vector of documents returned when multiple docs found)
+- handles **toml** input (`toml::Table` -> json)
 - unpack yaml tags (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html))
 - allows converting `jq` output to YAML (`-y`) or TOML (`-t`)
 
@@ -50,6 +50,31 @@ $ yq -y '.[3].metadata' test/deploy.yaml
 ```
 
 Stdin is always used if it's piped to.
+
+## TOML Input
+Using say `Cargo.toml` from this repo as input, and aliasing `tq='yq -i=toml'`:
+
+```sh
+$ tq '.package.categories[]' -r < Cargo.toml
+command-line-utilities
+parsing
+
+$ tq -t '.package.metadata' < Cargo.toml
+[binstall]
+bin-dir = "yq-{ target }/{ bin }{ format }"
+pkg-url = "{ repo }/releases/download/{ version }/yq-{ target }{ archive-suffix }"
+
+$ tq -y '.dependencies.clap' < Cargo.toml
+features:
+- cargo
+- derive
+version: 4.4.2
+
+$ tq '.profile' -c < Cargo.toml
+{"release":{"lto":true,"panic":"abort","strip":"symbols"}}
+```
+
+Add `alias tq='yq -i=toml'` to your `.bashrc` or `.zshrc` to make this permanent if you find it useful.
 
 ## Advanced Examples
 Select with nested query and raw output:
@@ -95,4 +120,5 @@ Output formatting such as `-y` for YAML or `-t` for TOML will require the output
 
 ## Limitations
 
-Only YAML/TOML is supported (no XML - PRs welcome). Shells out to `jq`. Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html)). No binary builds on CI yet.
+Only YAML/TOML is supported. Shells out to `jq` (only supports what your jq version supports).
+Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html)).
