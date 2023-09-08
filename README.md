@@ -2,7 +2,8 @@
 [![CI](https://github.com/clux/yq/actions/workflows/release.yml/badge.svg)](https://github.com/clux/yq/actions/workflows/release.yml)
 [![Crates.io](https://img.shields.io/crates/v/whyq.svg)](https://crates.io/crates/whyq)
 
-A lightweight and portable [jq](https://jqlang.github.io/jq/) wrapper written in Rust for doing arbitrary `jq` queries on **YAML** or **TOML** documents by transcoding through **JSON**.
+A lightweight and portable [jq](https://jqlang.github.io/jq/) wrapper for doing arbitrary queries from **YAML**/**TOML** documents by converting to **JSON** and passing to `jq`, then returning the result either as raw `jq` output, or back into TOML or YAML.
+
 ## Installation
 
 Via cargo:
@@ -17,18 +18,19 @@ or download a prebuilt from [releases](https://github.com/clux/yq/releases) eith
 cargo binstall whyq
 ```
 
-**Note**: Depends on `jq` being installed, and `provides` the `yq` binary.
+**Note**: Depends on `jq` being installed.
 
 ## Features
 
-- arbitrary `jq` usage on yaml/toml input with same syntax (we pass on args to `jq` along with json converted input)
-- generally functions as a drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (e.g. provides: yq)
+- arbitrary `jq` usage on yaml/toml input with same syntax (args passed along to `jq` with json converted input)
+- drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (e.g. provides: yq)
 - handles multidoc **yaml** input (vector of documents returned when multiple docs found)
-- handles **toml** input (`toml::Table` -> json)
-- unpack yaml tags (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html))
+- handles **toml** input (from [Table](https://docs.rs/toml/latest/toml/#parsing-toml))
+- unpacks yaml tags (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html))
 - allows converting `jq` output to YAML (`-y`) or TOML (`-t`)
+- uses <1MB in your CI image
 
-## Usage
+## YAML Input
 Use as [jq](https://jqlang.github.io/jq/tutorial/) either via stdin:
 
 ```sh
@@ -51,7 +53,10 @@ $ yq -y '.[3].metadata' test/deploy.yaml
 
 Stdin is always used if it's piped to.
 
+Note that YAML is the assumed default input format and primary usage case (and what the binary is named after).
+
 ## TOML Input
+
 Using say `Cargo.toml` from this repo as input, and aliasing `tq='yq -i=toml'`:
 
 ```sh
@@ -74,7 +79,7 @@ $ tq '.profile' -c < Cargo.toml
 {"release":{"lto":true,"panic":"abort","strip":"symbols"}}
 ```
 
-Add `alias tq='yq -i=toml'` to your `.bashrc` or `.zshrc` to make this permanent if you find it useful.
+Add `alias tq='yq -i=toml'` to your `.bashrc` or `.zshrc` (etc) to make this permanent if you find it useful.
 
 ## Advanced Examples
 Select with nested query and raw output:
@@ -100,7 +105,7 @@ yq -y '.updates[] | select(.["package-ecosystem"] == "cargo") | .groups' .github
 ```
 
 ## Argument Priority
-All arguments except output selectors such as `-y` or `-t` are passed on to `jq`.
+All arguments except output selectors such as `-y` or `-t`, and the input arg `-i` are passed on to `jq`.
 
 **Convention**; put `yq` arguments at the front, and `jq` arguments at the back. If it complains put a `--` to separate the argument groups.
 
@@ -115,10 +120,13 @@ yq -y -- -c '.[3].kind' < test/deploy.yaml # works; explicit separation
 
 ## Output Caveats
 
-Output formatting such as `-y` for YAML or `-t` for TOML will require the output from `jq` to be parseable json. If you pass on `-r` for raw output, then this will not be parseable as json.
+Output formatting such as `-y` for YAML or `-t` for TOML will require the output from `jq` to be parseable json.
+If you pass on `-r` for raw output, then this will not be parseable as json.
 
 
 ## Limitations
 
-Only YAML/TOML is supported. Shells out to `jq` (only supports what your jq version supports).
-Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html)).
+- Only YAML/TOML input/output is supported (no XML).
+- Shells out to `jq` (only supports what your jq version supports).
+- Does not provide rich `-h` or `--help` output (assumes you can use `jq --help` or `man jq`).
+- Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html)).
