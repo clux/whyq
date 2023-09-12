@@ -72,7 +72,11 @@ impl Args {
 
         let mut docs: Vec<serde_json::Value> = vec![];
         for doc in yaml_de {
-            docs.push(singleton_map_recursive::deserialize(doc)?);
+            let mut yaml_doc: serde_yaml::Value = singleton_map_recursive::deserialize(doc)?;
+            yaml_doc.apply_merge()?;
+            let yaml_ser = serde_yaml::to_string(&yaml_doc)?;
+            let json_value: serde_json::Value = serde_json::from_str(&yaml_ser)?;
+            docs.push(json_value);
         }
         debug!("found {} documents", docs.len());
         // if there is 1 or 0 documents, do not return as nested documents
