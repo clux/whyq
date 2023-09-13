@@ -121,17 +121,9 @@ jobs:
           [[ "${{ matrix.name }}" == windows-* ]] && ext=".exe"
           bin="target/${{ matrix.target }}/release/yq${ext}"
           strip "$bin" || true
-
-          #version=$(cat VERSION)
           dst="yq-${{ matrix.target }}"
           mkdir "$dst"
-
-          mkdir -p "target/release"
-          cp "$bin" "target/release/" # workaround for cargo-deb silliness with targets
-
           cp "$bin" "$dst/"
-          #cp -r README.md LICENSE completions yq.1 "$dst/"
-          cp README.md LICENSE "$dst/"
 
       - name: Archive (tar)
         if: '! startsWith(matrix.name, ''windows-'')'
@@ -184,7 +176,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           generate_release_notes: true
-          #draft: true
           fail_on_unmatched_files: true
           files: |
             yq-*.tar.xz
