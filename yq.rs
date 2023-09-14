@@ -38,6 +38,10 @@ struct Args {
     #[arg(short = 'i', long, value_enum, default_value_t)]
     input: Input,
 
+    /// Apply YAML merge tags
+    #[arg(short = 'm', long, default_value = "false")] // TODO: yaml only? different input format?
+    yaml_merge: bool,
+
     /// Arguments passed to jq
     ///
     /// These arguments must be trailing and come after the flags above.
@@ -72,10 +76,14 @@ impl Args {
 
         let mut docs: Vec<serde_json::Value> = vec![];
         for doc in yaml_de {
-            let mut yaml_doc: serde_yaml::Value = singleton_map_recursive::deserialize(doc)?;
-            yaml_doc.apply_merge()?;
-            let yaml_ser = serde_yaml::to_string(&yaml_doc)?;
-            let json_value: serde_json::Value = serde_json::from_str(&yaml_ser)?;
+            let json_value: serde_json::Value = if self.yaml_merge {
+                let mut yaml_doc: serde_yaml::Value = singleton_map_recursive::deserialize(doc)?;
+                yaml_doc.apply_merge()?;
+                let yaml_ser = serde_yaml::to_string(&yaml_doc)?;
+                serde_yaml::from_str(&yaml_ser)?
+            } else {
+                singleton_map_recursive::deserialize(doc)?
+            };
             docs.push(json_value);
         }
         debug!("found {} documents", docs.len());
@@ -99,8 +107,7 @@ impl Args {
                 Self::try_parse_from(["cmd", "-h"])?;
                 std::process::exit(2);
             }
-            let data = std::fs::read_to_string(f)?;
-            data
+            std::fs::read_to_string(f)?
         } else {
             Self::try_parse_from(["cmd", "-h"])?;
             std::process::exit(2);
