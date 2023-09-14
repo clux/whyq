@@ -192,6 +192,7 @@ mod test {
             Self {
                 yaml_output: yaml,
                 toml_output: false,
+                yaml_merge: false,
                 input: Input::Yaml,
                 extra: args.into_iter().map(|x| x.to_string()).collect(),
             }
