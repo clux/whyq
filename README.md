@@ -25,7 +25,7 @@ cargo binstall whyq
 - arbitrary `jq` usage on yaml/toml input with same syntax (args passed along to `jq` with json converted input)
 - drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (e.g. provides: yq)
 - handles multidoc **yaml** input (vector of documents returned when multiple docs found)
-- handles duplicate yaml keys and [yaml merge keys](https://yaml.org/type/merge.html)
+- handles [yaml merge keys](https://yaml.org/type/merge.html)
 - handles **toml** input (from [Table](https://docs.rs/toml/latest/toml/#parsing-toml))
 - unpacks yaml tags (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html))
 - allows converting `jq` output to YAML (`-y`) or TOML (`-t`)
