@@ -26,7 +26,6 @@ toml = { version = "0.7.6", features = ["display"] }
 serde_yaml = "0.9.25"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-serde = "1.0.188"
 
 [profile.release]
 lto = true
