@@ -38,9 +38,21 @@ struct Args {
     #[arg(short = 'i', long, value_enum, default_value_t)]
     input: Input,
 
-    /// Expand tags such as YAML <<: merge tags
-    #[arg(short = 'x', default_value = "false")] // Ideally should only work if input == Input::yaml
-    expand: bool,
+    /// Do not expand tags
+    ///
+    /// This probably is not the desired behaviour for yaml given we are already
+    /// recursively singleton mapping the documents.
+    /// This is only an escape-hatch in case of early bugs, and hopefully will be removed
+    #[arg(long = "no-expand", default_value = "false")]
+    no_expand: bool,
+
+    /// Partially expand? testing..
+    #[arg(
+        long = "partial-expand",
+        default_value = "false",
+        conflicts_with = "no_expand"
+    )]
+    partial_expand: bool,
 
     /// Arguments passed to jq
     ///
@@ -76,13 +88,19 @@ impl Args {
 
         let mut docs: Vec<serde_json::Value> = vec![];
         for doc in yaml_de {
-            let json_value: serde_json::Value = if self.expand {
+            let json_value: serde_json::Value = if self.no_expand {
+                use serde::Deserialize;
+                debug!("no expanding");
+                serde_json::Value::deserialize(doc)?
+            } else if self.partial_expand {
+                debug!("some expanding");
+                singleton_map_recursive::deserialize(doc)?
+            } else {
+                debug!("full expanding");
                 let mut yaml_doc: serde_yaml::Value = singleton_map_recursive::deserialize(doc)?;
                 yaml_doc.apply_merge()?;
                 let yaml_ser = serde_yaml::to_string(&yaml_doc)?;
                 serde_yaml::from_str(&yaml_ser)?
-            } else {
-                singleton_map_recursive::deserialize(doc)?
             };
             docs.push(json_value);
         }
@@ -192,7 +210,8 @@ mod test {
             Self {
                 yaml_output: yaml,
                 toml_output: false,
-                expand: false,
+                no_expand: false,
+                partial_expand: false, // TODO: cleanup
                 input: Input::Yaml,
                 extra: args.into_iter().map(|x| x.to_string()).collect(),
             }
