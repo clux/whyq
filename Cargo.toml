@@ -30,7 +30,7 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 [profile.release]
 lto = true
 panic = "abort"
-strip = "symbols"
+#strip = "symbols"
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/{ version }/yq-{ target }{ archive-suffix }"

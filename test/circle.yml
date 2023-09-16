@@ -1,0 +1,58 @@
+version: 2.1
+
+definitions:
+  steps:
+    - step: &build_binary
+        name: Build binary
+        command: chmod a+w . && cargo build --release
+    - step: &versions
+        name: Version information
+        command: rustc --version; cargo --version; rustup --version
+
+  filters:
+    on_tag: &on_tag
+      tags:
+        only: /v[0-9]+(\.[0-9]+)*/
+      branches:
+        ignore: /.*/
+    on_every_commit: &on_every_commit
+      tags:
+        only: /.*/
+
+jobs:
+  build:
+    docker:
+      - image: clux/muslrust:stable
+    resource_class: xlarge
+    environment:
+      IMAGE_NAME: whyq
+    steps:
+      - checkout
+      - run: *versions
+      - run: *build_binary
+      - run: echo versions
+
+  release:
+    docker:
+      - image: clux/muslrust:stable
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: *versions
+      - run: *build_binary
+      - upload:
+          source: "target/x86_64-unknown-linux-musl/release/${IMAGE_NAME}"
+          binary_name: "${IMAGE_NAME}"
+          version: "${CIRCLE_TAG}"
+          arch: "x86_64-unknown-linux-musl"
+
+workflows:
+  version: 2
+  my_flow:
+    jobs:
+      - build:
+          filters:
+            <<: *on_every_commit
+      - release:
+          filters:
+             <<: *on_tag
