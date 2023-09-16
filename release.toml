@@ -1,7 +1,7 @@
 # Release process
 #
 # Bump version in Cargo.toml, and create a corresponding git tag for it
-# Once pushed, CI will build releases (TODO)
+# Once pushed, CI will build bin and attach to a release for the tag
 
 pre-release-commit-message = "{{version}}"
 push = true
