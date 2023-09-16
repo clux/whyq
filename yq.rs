@@ -38,9 +38,9 @@ struct Args {
     #[arg(short = 'i', long, value_enum, default_value_t)]
     input: Input,
 
-    /// Apply YAML merge tags
-    #[arg(short = 'm', long, default_value = "false")] // TODO: yaml only? different input format?
-    yaml_merge: bool,
+    /// Expand tags such as YAML <<: merge tags
+    #[arg(short = 'x', default_value = "false")] // Ideally should only work if input == Input::yaml
+    expand: bool,
 
     /// Arguments passed to jq
     ///
@@ -76,7 +76,7 @@ impl Args {
 
         let mut docs: Vec<serde_json::Value> = vec![];
         for doc in yaml_de {
-            let json_value: serde_json::Value = if self.yaml_merge {
+            let json_value: serde_json::Value = if self.expand {
                 let mut yaml_doc: serde_yaml::Value = singleton_map_recursive::deserialize(doc)?;
                 yaml_doc.apply_merge()?;
                 let yaml_ser = serde_yaml::to_string(&yaml_doc)?;
@@ -192,7 +192,7 @@ mod test {
             Self {
                 yaml_output: yaml,
                 toml_output: false,
-                yaml_merge: false,
+                expand: false,
                 input: Input::Yaml,
                 extra: args.into_iter().map(|x| x.to_string()).collect(),
             }

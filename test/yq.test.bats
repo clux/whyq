@@ -59,9 +59,9 @@
 }
 
 @test "yaml_merge" {
-  run yq -m '.workflows.my_flow.jobs[0].build' -c < test/circle.yml
+  run yq -x '.workflows.my_flow.jobs[0].build' -c < test/circle.yml
   echo "$output" && echo "$output" | grep '{"filters":{"tags":{"only":"/.*/"}}}'
 
-  run yq -m '.jobs.build.steps[1].run.name' -r < test/circle.yml
+  run yq -x '.jobs.build.steps[1].run.name' -r < test/circle.yml
   echo "$output" && echo "$output" | grep "Version information"
 }
