@@ -25,11 +25,10 @@ cargo binstall whyq
 - arbitrary `jq` usage on yaml/toml input with same syntax (args passed along to `jq` with json converted input)
 - drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (e.g. provides: yq)
 - handles multidoc **yaml** input (vector of documents returned when multiple docs found)
-- handles [yaml merge keys](https://yaml.org/type/merge.html)
+- handles [yaml merge keys](https://yaml.org/type/merge.html) and expands yaml tags (via `serde_yaml`)
 - handles **toml** input (from [Table](https://docs.rs/toml/latest/toml/#parsing-toml))
-- unpacks yaml tags (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html))
 - allows converting `jq` output to YAML (`-y`) or TOML (`-t`)
-- uses <1MB in your CI image
+- <1MB in binary size (for your small cloud CI images)
 
 ## YAML Input
 Use as [jq](https://jqlang.github.io/jq/tutorial/) either via stdin:
@@ -130,4 +129,5 @@ If you pass on `-r` for raw output, then this will not be parseable as json.
 - Only YAML/TOML input/output is supported (no XML).
 - Shells out to `jq` (only supports what your jq version supports).
 - Does not provide rich `-h` or `--help` output (assumes you can use `jq --help` or `man jq`).
-- Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html)).
+- Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html) and then [apply_merged](https://docs.rs/serde_yaml/latest/serde_yaml/value/enum.Value.html#method.apply_merge) before `jq`)
+- Does [not support duplicate keys](https://github.com/clux/whyq/issues/14) in the input document
