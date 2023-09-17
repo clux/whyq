@@ -69,7 +69,7 @@ struct Args {
     ///
     /// This is unlikely to work with yaml or toml output because it requires
     /// that the jq -r output is deserializable into the desired output format.
-    #[arg(short = 'c', long, default_value = "false")]
+    #[arg(short = 'j', long, default_value = "false")]
     join_output: bool,
 }
 
