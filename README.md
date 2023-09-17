@@ -57,7 +57,7 @@ Note that YAML is the assumed default input format and primary usage case (and w
 
 ## TOML Input
 
-Using say `Cargo.toml` from this repo as input, and aliasing `tq='yq -i=toml'`:
+Using say `Cargo.toml` from this repo as input, and aliasing `tq='yq --input=toml'`:
 
 ```sh
 $ tq '.package.categories[]' -r < Cargo.toml

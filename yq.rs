@@ -25,7 +25,7 @@ enum Input {
 /// yq '.[].kind' -r < manifest.yml
 ///
 /// yq -y '.[2].metadata' < manifest.yml
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Default)]
 #[command(author, version, about)]
 struct Args {
     /// Transcode jq JSON output into YAML and emit it
@@ -35,20 +35,41 @@ struct Args {
     #[arg(short = 't', long, default_value = "false", conflicts_with = "yaml_output")]
     toml_output: bool,
     /// Input format
-    #[arg(short = 'i', long, value_enum, default_value_t)]
+    #[arg(long, value_enum, default_value_t)]
     input: Input,
 
-    /// Arguments passed to jq
+    /// Inplace editing
+    #[arg(short, long, default_value = "false", requires = "file")]
+    in_place: bool,
+
+    #[arg(default_value = "false")]
+    file: Option<PathBuf>,
+
+    // ----- jq arguments
+    /// Output strings without escapes and quotes
+    #[arg(short, long, default_value = "false")]
+    raw_output: bool,
+
+    /// Compact instead of pretty-printed output
     ///
-    /// These arguments must be trailing and come after the flags above.
-    /// Do not join yq flags nad jq flags (such as `-yc`; use `-y -- -c`)
+    /// This is unlikely to work with yaml or toml output because it requires
+    /// that the jq -c output is deserializable into the desired output format.
+    #[arg(short = 'c', long, default_value = "false")]
+    compact_output: bool,
+
+    /// Output strings without escapes and quotes
     ///
-    /// If the jq args start with a flag, you need an explicit trailing vararg marker (--).
-    /// This is not needed if the first vararg is a jq query or a normal positional value.
+    /// This is unlikely to work with yaml or toml output because it requires
+    /// that the jq -r output is deserializable into the desired output format.
+    #[arg(short = 'r', long, default_value = "false")]
+    raw_output: bool,
+
+    /// Output strings without escapes and quotes, without newlines after each output
     ///
-    /// The last arg can be a file, but stdin will be preferred when present.
-    #[arg(trailing_var_arg = true)]
-    extra: Vec<String>,
+    /// This is unlikely to work with yaml or toml output because it requires
+    /// that the jq -r output is deserializable into the desired output format.
+    #[arg(short = 'c', long, default_value = "false")]
+    join_output: bool,
 }
 
 impl Args {
