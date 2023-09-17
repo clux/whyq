@@ -43,10 +43,11 @@ struct Args {
     #[arg(short, long, default_value = "false", requires = "file")]
     in_place: bool,
 
-    #[arg(default_value = "")]
+    /// Query to be sent to jq
+    #[arg()]
     jq_query: String,
 
-    #[arg(default_value = "false")]
+    #[arg()]
     file: Option<PathBuf>,
 
     // ----- jq arguments

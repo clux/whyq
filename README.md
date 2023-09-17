@@ -104,20 +104,6 @@ Escaping keys with slashes etc in them:
 yq -y '.updates[] | select(.["package-ecosystem"] == "cargo") | .groups' .github/dependabot.yml
 ```
 
-## Argument Priority
-All arguments except output selectors such as `-y` or `-t`, and the input arg `-i` are passed on to `jq`.
-
-**Convention**; put `yq` arguments at the front, and `jq` arguments at the back. If it complains put a `--` to separate the argument groups.
-
-**Explaination**: arg parsers are generally struggling with positional leftover arguments containing flags because they lack concepts of "our flags" and "their flags" and will try to match them together. This means combining yq and jq flags into a single arg will not work, and why a convention to explicitly separate the two args exists. Normally the separation is inferred automatically if you put a normal jq query in the middle, but if you don't have any normal positional value arg, you can put a `--` trailing vararg delimiter to indicate that all remaining flags are for `jq`;
-
-```sh
-yq -y -c '.[3].kind' < test/deploy.yaml # fails; implicit separation is not detected for a flag first
-yq -y '.[3].kind' -c < test/deploy.yaml # works; implicit separation detected after positional
-yq -yc '.[3].kind' < test/deploy.yaml # fails; cannot combine of yq and jq args
-yq -y -- -c '.[3].kind' < test/deploy.yaml # works; explicit separation
-```
-
 ## Output Caveats
 
 Output formatting such as `-y` for YAML or `-t` for TOML will require the output from `jq` to be parseable json.
