@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Parser, ValueEnum};
 use serde_yaml::{self, with::singleton_map_recursive, Deserializer};
 use std::io::{stderr, stdin, BufReader, IsTerminal, Read, Write};
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use tracing::*;
 
@@ -42,14 +43,13 @@ struct Args {
     #[arg(short, long, default_value = "false", requires = "file")]
     in_place: bool,
 
+    #[arg(default_value = "")]
+    jq_query: String,
+
     #[arg(default_value = "false")]
     file: Option<PathBuf>,
 
     // ----- jq arguments
-    /// Output strings without escapes and quotes
-    #[arg(short, long, default_value = "false")]
-    raw_output: bool,
-
     /// Compact instead of pretty-printed output
     ///
     /// This is unlikely to work with yaml or toml output because it requires
@@ -73,11 +73,22 @@ struct Args {
 }
 
 impl Args {
+    fn jq_args(&self) -> Vec<String> {
+        let mut args = vec![self.jq_query.clone()];
+        if self.compact_output {
+            args.push("-c".into());
+        }
+        if self.raw_output {
+            args.push("-r".into());
+        }
+        if self.join_output {
+            args.push("-j".into());
+        }
+        args
+    }
+
     fn read_yaml(&mut self) -> Result<Vec<u8>> {
-        let yaml_de = if !stdin().is_terminal() && !cfg!(test) {
-            debug!("reading from stdin");
-            Deserializer::from_reader(stdin())
-        } else if let Some(f) = self.extra.pop() {
+        let yaml_de = if let Some(f) = &self.file {
             if !std::path::Path::new(&f).exists() {
                 Self::try_parse_from(["cmd", "-h"])?;
                 std::process::exit(2);
@@ -86,6 +97,9 @@ impl Args {
             // NB: can do everything async (via tokio + tokio_util) except this:
             // serde only has a sync reader interface, so may as well do all sync.
             Deserializer::from_reader(BufReader::new(file))
+        } else if !stdin().is_terminal() && !cfg!(test) {
+            debug!("reading from stdin");
+            Deserializer::from_reader(stdin())
         } else {
             Self::try_parse_from(["cmd", "-h"])?;
             std::process::exit(2);
@@ -113,16 +127,16 @@ impl Args {
     fn read_toml(&mut self) -> Result<Vec<u8>> {
         use toml::Table;
         let mut buf = String::new();
-        let toml_str = if !stdin().is_terminal() && !cfg!(test) {
-            debug!("reading from stdin");
-            stdin().read_to_string(&mut buf)?;
-            buf
-        } else if let Some(f) = self.extra.pop() {
+        let toml_str = if let Some(f) = &self.file {
             if !std::path::Path::new(&f).exists() {
                 Self::try_parse_from(["cmd", "-h"])?;
                 std::process::exit(2);
             }
             std::fs::read_to_string(f)?
+        } else if !stdin().is_terminal() && !cfg!(test) {
+            debug!("reading from stdin");
+            stdin().read_to_string(&mut buf)?;
+            buf
         } else {
             Self::try_parse_from(["cmd", "-h"])?;
             std::process::exit(2);
@@ -142,10 +156,11 @@ impl Args {
 
     /// Pass json encoded bytes to jq with arguments for jq
     fn shellout(&self, input: Vec<u8>) -> Result<Vec<u8>> {
-        debug!("jq args: {:?}", self.extra);
+        let args = self.jq_args();
+        debug!("jq args: {:?}", &args);
         // shellout jq with given args
         let mut child = Command::new("jq")
-            .args(&self.extra)
+            .args(&args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
@@ -202,20 +217,15 @@ fn main() -> Result<()> {
 #[cfg(test)]
 mod test {
     use super::*;
-    impl Args {
-        fn new(yaml: bool, args: &[&str]) -> Self {
-            Self {
-                yaml_output: yaml,
-                toml_output: false,
-                input: Input::Yaml,
-                extra: args.into_iter().map(|x| x.to_string()).collect(),
-            }
-        }
-    }
     #[test]
     fn file_input_both_outputs() -> Result<()> {
         init_env_tracing_stderr()?;
-        let mut args = Args::new(false, &[".[2].metadata", "-c", "test/deploy.yaml"]);
+        let mut args = Args {
+            jq_query: ".[2].metadata".into(),
+            compact_output: true,
+            file: Some("test/deploy.yaml".into()),
+            ..Default::default()
+        };
         println!("have stdin? {}", !std::io::stdin().is_terminal());
         let data = args.read_input().unwrap();
         println!("debug args: {:?}", args);
