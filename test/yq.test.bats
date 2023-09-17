@@ -65,3 +65,9 @@
   run yq '.jobs.build.steps[1].run.name' -r < test/circle.yml
   echo "$output" && echo "$output" | grep "Version information"
 }
+
+@test "inplace" {
+  run yq -yi '.kind = "Hahah"' test/grafana.yaml
+  run yq -r .kind test/grafana.yaml
+  echo "$output" && echo "$output" | grep "Hahah"
+}

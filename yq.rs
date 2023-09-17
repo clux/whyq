@@ -211,7 +211,12 @@ fn main() -> Result<()> {
     let input = args.read_input()?;
     let stdout = args.shellout(input)?;
     let output = args.output(stdout)?;
-    println!("{}", output);
+    if args.in_place {
+        let f = args.file.unwrap(); // required
+        std::fs::write(f, output)?;
+    } else {
+        println!("{}", output);
+    }
     Ok(())
 }
 
