@@ -25,7 +25,7 @@ cargo binstall whyq
 ### jq compatibility
 
 - arbitrary `jq` usage on any input format (yaml/toml/json)
-- [same filter syntax](https://jqlang.github.io/jq/manual/#basic-filters)
+- [same filter syntax](https://jqlang.github.io/jq/manual/#basic-filters) (shells out to `jq`)
 - matches `jq`'s cli interface (only some extra input/output format controlling flags)
 - supports `jq` output formatters such as `-c`, `-r`, and `-j` (compact, raw, joined output resp)
 - supports [jq modules](https://jqlang.github.io/jq/manual/#modules) on all input formats
@@ -35,14 +35,14 @@ cargo binstall whyq
 - reads __multidoc yaml__ input, handles [yaml merge keys](https://yaml.org/type/merge.html) (expanding tags)
 - reads from __stdin xor file__ (file if last arg is a file)
 - output conversion shortcuts: `-y` (YAML) or `-t` (TOML)
-- ~1MB in binary size (for small cloud CI images / [binstalled ci actions](https://github.com/cargo-bins/cargo-binstall#faq))
 - drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (`provides: yq`)
+- ~[1MB](https://github.com/clux/whyq/releases/latest) in binary size (for small cloud CI images / [binstalled ci actions](https://github.com/cargo-bins/cargo-binstall#faq))
 
 ### Limitations
 
 - Shells out to `jq` (supports what your `jq` version supports)
 - Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html) and then [apply_merged](https://docs.rs/serde_yaml/latest/serde_yaml/value/enum.Value.html#method.apply_merge) before `jq`)
-- Does not __preserve indentation__ (unsupported in [serde_yaml](https://github.com/dtolnay/serde-yaml/issues/337))
+- Does not preserve indentation (unsupported in [serde_yaml](https://github.com/dtolnay/serde-yaml/issues/337))
 - Does not support [duplicate keys](https://github.com/clux/whyq/issues/14) in the input document
 - No XML/CSV support (or other more exotic formats)
 
@@ -137,7 +137,7 @@ Escaping keys with slashes etc in them:
 yq -y '.updates[] | select(.["package-ecosystem"] == "cargo") | .groups' .github/dependabot.yml
 ```
 
-Using helpers from `jq` [modules](https://jqlang.github.io/jq/manual/):
+Using helpers from `jq` [modules](https://jqlang.github.io/jq/manual/#modules) e.g. [k.jq](https://github.com/clux/whyq/blob/main/test/modules/k.jq):
 
 ```sh
 $ yq 'include "k"; .[] | gvk' -r -L$PWD/test/modules < test/deploy.yaml
@@ -152,3 +152,18 @@ apps/v1.Deployment
 
 Output formatting such as `-y` for YAML or `-t` for TOML will require the output from `jq` to be parseable json.
 If you pass on `-r`,`-c` or `-c` for raw/compact output, then this will generally not be parseable as json.
+
+### Debug Logs
+
+The project respects `RUST_LOG` when set, and sends these diagnostic logs to stderr:
+
+```sh
+$ RUST_LOG=debug yq '.version' test/circle.yml
+2023-09-18T23:17:04.533055Z DEBUG yq: args: Args { input: Yaml, output: Jq, yaml_output: false, toml_output: false, in_place: false, jq_query: ".version", file: Some("test/circle.yml"), compact_output: false, raw_output: false, join_output: false, modules: None }
+2023-09-18T23:17:04.533531Z DEBUG yq: found 1 documents
+2023-09-18T23:17:04.533563Z DEBUG yq: input decoded as json: {"definitions":{"filters":{"on_every_commit":{"tags":{"only":"/.*/"}},"on_tag":{"branches":{"ignore":"/.*/"},"tags":{"only":"/v[0-9]+(\\.[0-9]+)*/"}}},"steps":[{"step":{"command":"chmod a+w . && cargo build --release","name":"Build binary"}},{"step":{"command":"rustc --version; cargo --version; rustup --version","name":"Version information"}}]},"jobs":{"build":{"docker":[{"image":"clux/muslrust:stable"}],"environment":{"IMAGE_NAME":"whyq"},"resource_class":"xlarge","steps":["checkout",{"run":{"command":"rustc --version; cargo --version; rustup --version","name":"Version information"}},{"run":{"command":"chmod a+w . && cargo build --release","name":"Build binary"}},{"run":"echo versions"}]},"release":{"docker":[{"image":"clux/muslrust:stable"}],"resource_class":"xlarge","steps":["checkout",{"run":{"command":"rustc --version; cargo --version; rustup --version","name":"Version information"}},{"run":{"command":"chmod a+w . && cargo build --release","name":"Build binary"}},{"upload":{"arch":"x86_64-unknown-linux-musl","binary_name":"${IMAGE_NAME}","source":"target/x86_64-unknown-linux-musl/release/${IMAGE_NAME}","version":"${CIRCLE_TAG}"}}]}},"version":2.1,"workflows":{"my_flow":{"jobs":[{"build":{"filters":{"tags":{"only":"/.*/"}}}},{"release":{"filters":{"branches":{"ignore":"/.*/"},"tags":{"only":"/v[0-9]+(\\.[0-9]+)*/"}}}}]},"version":2}}
+2023-09-18T23:17:04.533650Z DEBUG yq: jq args: [".version"]
+2023-09-18T23:17:04.538606Z DEBUG yq: jq stdout: 2.1
+
+2.1
+```

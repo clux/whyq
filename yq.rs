@@ -99,7 +99,7 @@ struct Args {
     join_output: bool,
 
     /// Search jq modules from the directory
-    #[arg(short = 'L', default_value = "None")]
+    #[arg(short = 'L')]
     modules: Option<PathBuf>,
 }
 
