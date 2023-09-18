@@ -47,14 +47,14 @@
     skip # ci is fun
   fi
   run yq
-  [ "$status" -eq 1 ]
+  [ "$status" -eq 2 ]
 }
 
 @test "toml" {
-  run yq -i=toml -y '.package.edition' -r < Cargo.toml
+  run yq --input=toml -y '.package.edition' -r < Cargo.toml
   echo "$output" && echo "$output" | grep '2021'
 
-  run yq -i=toml '.dependencies.clap.features' -c < Cargo.toml
+  run yq --input=toml '.dependencies.clap.features' -c < Cargo.toml
   echo "$output" && echo "$output" | grep '["cargo","derive"]'
 }
 
@@ -64,4 +64,16 @@
 
   run yq '.jobs.build.steps[1].run.name' -r < test/circle.yml
   echo "$output" && echo "$output" | grep "Version information"
+}
+
+@test "inplace" {
+  run yq -yi '.kind = "Hahah"' test/grafana.yaml
+  run yq -r .kind test/grafana.yaml
+  echo "$output" && echo "$output" | grep "Hahah"
+  yq -yi '.kind = "Deployment"' test/grafana.yaml # undo
+}
+
+@test "join" {
+  run yq -j '.spec.template.spec.containers[].image' test/grafana.yaml
+  echo "$output" && echo "$output" | grep "quay.io/kiwigrid/k8s-sidecar:1.24.6quay.io/kiwigrid/k8s-sidecar:1.24.6docker.io/grafana/grafana:10.1.0"
 }
