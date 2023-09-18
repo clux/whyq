@@ -288,6 +288,7 @@ mod test {
         let mut args = Args {
             jq_query: ".[2].metadata".into(),
             compact_output: true,
+            output: Output::Jq,
             file: Some("test/deploy.yaml".into()),
             ..Default::default()
         };
@@ -297,7 +298,7 @@ mod test {
         let res = args.shellout(data.clone()).unwrap();
         let out = args.output(res)?;
         assert_eq!(out, "{\"name\":\"controller\"}");
-        args.yaml_output = true;
+        args.output = Output::Yaml;
         let res2 = args.shellout(data)?;
         let out2 = args.output(res2)?;
         assert_eq!(out2, "name: controller");
