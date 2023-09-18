@@ -22,13 +22,15 @@ cargo binstall whyq
 
 ## Features
 
-- arbitrary `jq` usage on yaml/toml/json input with the same syntax (same filter syntax, supports modules) by leveraging `jq` as an intermediate format
-- drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (e.g. provides: yq)
-- handles multidoc **yaml** input (vector of documents returned when multiple docs found)
-- handles [yaml merge keys](https://yaml.org/type/merge.html) and expands yaml tags (via `serde_yaml`)
-- handles **toml** input (from [Table](https://docs.rs/toml/latest/toml/#parsing-toml))
+- arbitrary `jq` usage on yaml/toml/json input with the [same filter syntax](https://jqlang.github.io/jq/manual/#basic-filters), by leveraging `jq` as an intermediate format
+- __same cli interface as `jq`__ (but with some extra input/output controlling flags)
+- handles __multidoc yaml__ input, [yaml merge keys](https://yaml.org/type/merge.html) (expanding tags)
+- reads from stdin xor file (file if last arg is a file)
+- supports `jq` output formatters such as `-c`, `-r`, and `-j` (compact, raw, joined output resp)
 - allows converting `jq` output to YAML (`-y`) or TOML (`-t`)
+- supports [jq modules](https://jqlang.github.io/jq/manual/#modules) on all input formats
 - <1MB in binary size (for your small cloud CI images)
+- drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (`provides: yq`)
 
 ## YAML Input
 Use as [jq](https://jqlang.github.io/jq/tutorial/) either via stdin:
@@ -51,9 +53,7 @@ $ yq '.[3].kind' -r test/deploy.yaml
 $ yq -y '.[3].metadata' test/deploy.yaml
 ```
 
-Stdin is always used if it's piped to.
-
-Note that YAML is the assumed default input format and primary usage case (and what the binary is named after).
+The default input format is YAML and is what the binary is named for (and the most common primary usage case).
 
 ## TOML Input
 
@@ -135,13 +135,12 @@ apps/v1.Deployment
 ## Output Caveats
 
 Output formatting such as `-y` for YAML or `-t` for TOML will require the output from `jq` to be parseable json.
-If you pass on `-r` for raw output, then this will not be parseable as json.
-
+If you pass on `-r`,`-c` or `-c` for raw/compact output, then this will generally not be parseable as json.
 
 ## Limitations
 
-- Shells out to `jq` (only supports what your jq version supports).
+- Shells out to `jq` (supports what your `jq` version supports).
 - Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html) and then [apply_merged](https://docs.rs/serde_yaml/latest/serde_yaml/value/enum.Value.html#method.apply_merge) before `jq`)
-- Does not preserve (or allow customizing) indentation in the output (supported in [serde_json](https://docs.rs/serde_json/latest/serde_json/ser/struct.PrettyFormatter.html), but unsupported in [serde_yaml](https://github.com/dtolnay/serde-yaml/issues/337))
-- Does [not support duplicate keys](https://github.com/clux/whyq/issues/14) in the input document
-- No XML support
+- Does not __preserve indentation__ (unsupported in [serde_yaml](https://github.com/dtolnay/serde-yaml/issues/337))
+- Does not support [duplicate keys](https://github.com/clux/whyq/issues/14) in the input document
+- No XML/CSV support
