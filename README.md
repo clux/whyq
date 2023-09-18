@@ -137,7 +137,7 @@ Escaping keys with slashes etc in them:
 yq -y '.updates[] | select(.["package-ecosystem"] == "cargo") | .groups' .github/dependabot.yml
 ```
 
-Using helpers from `jq` [modules](https://jqlang.github.io/jq/manual/):
+Using helpers from `jq` [modules](https://jqlang.github.io/jq/manual/#modules) e.g. [k.jq](https://github.com/clux/whyq/blob/main/test/modules/k.jq):
 
 ```sh
 $ yq 'include "k"; .[] | gvk' -r -L$PWD/test/modules < test/deploy.yaml
