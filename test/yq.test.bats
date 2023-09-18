@@ -72,3 +72,8 @@
   echo "$output" && echo "$output" | grep "Hahah"
   yq -yi '.kind = "Deployment"' test/grafana.yaml # undo
 }
+
+@test "join" {
+  run yq -j '.spec.template.spec.containers[].image' test/grafana.yaml
+  echo "$output" && echo "$output" | grep "quay.io/kiwigrid/k8s-sidecar:1.24.6quay.io/kiwigrid/k8s-sidecar:1.24.6docker.io/grafana/grafana:10.1.0"
+}

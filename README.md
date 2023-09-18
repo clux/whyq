@@ -114,6 +114,6 @@ If you pass on `-r` for raw output, then this will not be parseable as json.
 
 - Only YAML/TOML input/output is supported (no XML).
 - Shells out to `jq` (only supports what your jq version supports).
-- Does not provide rich `-h` or `--help` output (assumes you can use `jq --help` or `man jq`).
 - Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html) and then [apply_merged](https://docs.rs/serde_yaml/latest/serde_yaml/value/enum.Value.html#method.apply_merge) before `jq`)
+- Does not preserve (or allow customizing) indentation in the output (supported in [serde_json](https://docs.rs/serde_json/latest/serde_json/ser/struct.PrettyFormatter.html), but unsupported in [serde_yaml](https://github.com/dtolnay/serde-yaml/issues/337))
 - Does [not support duplicate keys](https://github.com/clux/whyq/issues/14) in the input document

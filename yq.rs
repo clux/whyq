@@ -43,29 +43,30 @@ struct Args {
     #[arg(short, long, default_value = "false", requires = "file")]
     in_place: bool,
 
-    /// Query to be sent to jq
+    /// Query to be sent to jq (see https://jqlang.github.io/jq/manual/)
     #[arg()]
     jq_query: String,
 
+    /// Optional file to read (instead of stdin) in the chosen --input format
     #[arg()]
     file: Option<PathBuf>,
 
     // ----- jq arguments
-    /// Compact instead of pretty-printed output
+    /// Compact instead of pretty-printed output (json only)
     ///
     /// This is unlikely to work with yaml or toml output because it requires
     /// that the jq -c output is deserializable into the desired output format.
     #[arg(short = 'c', long, default_value = "false")]
     compact_output: bool,
 
-    /// Output strings without escapes and quotes
+    /// Output strings without escapes and quotes (json only)
     ///
     /// This is unlikely to work with yaml or toml output because it requires
     /// that the jq -r output is deserializable into the desired output format.
     #[arg(short = 'r', long, default_value = "false")]
     raw_output: bool,
 
-    /// Output strings without escapes and quotes, without newlines after each output
+    /// Output strings without escapes and quotes, without newlines after each output (json only)
     ///
     /// This is unlikely to work with yaml or toml output because it requires
     /// that the jq -r output is deserializable into the desired output format.
