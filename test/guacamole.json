@@ -1,0 +1,27 @@
+{
+  "ingredients": {
+    "avocado": { "amount": 3 },
+    "lime": { "amount": 1, "type": "juiced" },
+    "salt": { "amount": 0.5, "unit": "tsp" },
+    "cumin": { "amount": 0.5, "unit": "tsp", "type": "ground" },
+    "pepper": { "amount": 0.5, "unit": "tsp", "type": "cayenne" },
+    "onions": { "amount": 1, "note": "medium", "type": "white", "condition": "diced" },
+    "tomatoes": { "amount": 2, "type": "roma", "type": "white", "condition": "diced" },
+    "coriander": { "amount": 1, "unit": "tbsp", "condition": "chopped" },
+    "garlic": { "amount": 1, "unit": "clove", "condition": "minced" }
+  },
+  "time": {
+    "preparation": 20,
+    "resting": 60
+  },
+  "instructions": [
+    "Extract goop from avocados in a bowl",
+    "Add most of the lime juice (to coat)",
+    "Mash with potato masher",
+    "Add spices",
+    "Mash",
+    "Fold in onions, tomatoes, garlic, and coriander",
+    "Add 1 tbsp of reserved lime juice",
+    "Let it rest at room temp before serving"
+  ]
+}

@@ -77,3 +77,8 @@
   run yq -j '.spec.template.spec.containers[].image' test/grafana.yaml
   echo "$output" && echo "$output" | grep "quay.io/kiwigrid/k8s-sidecar:1.24.6quay.io/kiwigrid/k8s-sidecar:1.24.6docker.io/grafana/grafana:10.1.0"
 }
+
+@test "json_input" {
+  run yq --input=json ".ingredients | keys" -c < test/guacamole.json
+  echo "$output" && echo "$output" | grep '["avocado","coriander","cumin","garlic","lime","onions","pepper","salt","tomatoes"]'
+}
