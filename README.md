@@ -2,7 +2,7 @@
 [![CI](https://github.com/clux/yq/actions/workflows/release.yml/badge.svg)](https://github.com/clux/yq/actions/workflows/release.yml)
 [![Crates.io](https://img.shields.io/crates/v/whyq.svg)](https://crates.io/crates/whyq)
 
-A lightweight and portable [jq](https://jqlang.github.io/jq/) wrapper for doing arbitrary queries from **YAML**/**TOML** documents by converting to **JSON** and passing to `jq`, then returning the result either as raw `jq` output, or back into TOML or YAML.
+A lightweight and portable [jq](https://jqlang.github.io/jq/) wrapper for doing arbitrary queries from **YAML**/**TOML**/**JSON** documents by converting to **JSON** and passing to `jq`, then returning the result either as raw `jq` output, or back into TOML or YAML.
 
 ## Installation
 
@@ -22,7 +22,7 @@ cargo binstall whyq
 
 ## Features
 
-- arbitrary `jq` usage on yaml/toml input with same syntax (args passed along to `jq` with json converted input)
+- arbitrary `jq` usage on yaml/toml/json input with the same syntax (args passed along to `jq` with json converted input)
 - drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (e.g. provides: yq)
 - handles multidoc **yaml** input (vector of documents returned when multiple docs found)
 - handles [yaml merge keys](https://yaml.org/type/merge.html) and expands yaml tags (via `serde_yaml`)
@@ -112,8 +112,8 @@ If you pass on `-r` for raw output, then this will not be parseable as json.
 
 ## Limitations
 
-- Only YAML/TOML input/output is supported (no XML).
 - Shells out to `jq` (only supports what your jq version supports).
 - Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html) and then [apply_merged](https://docs.rs/serde_yaml/latest/serde_yaml/value/enum.Value.html#method.apply_merge) before `jq`)
 - Does not preserve (or allow customizing) indentation in the output (supported in [serde_json](https://docs.rs/serde_json/latest/serde_json/ser/struct.PrettyFormatter.html), but unsupported in [serde_yaml](https://github.com/dtolnay/serde-yaml/issues/337))
 - Does [not support duplicate keys](https://github.com/clux/whyq/issues/14) in the input document
+- No XML support

@@ -10,6 +10,15 @@ use tracing::*;
 enum Input {
     #[default]
     Yaml,
+    Json,
+    Toml,
+}
+
+#[derive(Copy, Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Output {
+    Yaml,
+    #[default]
+    Jq,
     Toml,
 }
 
@@ -29,17 +38,33 @@ enum Input {
 #[derive(Parser, Debug, Default)]
 #[command(author, version, about)]
 struct Args {
-    /// Transcode jq JSON output into YAML and emit it
-    #[arg(short = 'y', long, default_value = "false", conflicts_with = "toml_output")]
-    yaml_output: bool,
-    /// Transcode jq JSON output into TOML and emit it
-    #[arg(short = 't', long, default_value = "false", conflicts_with = "yaml_output")]
-    toml_output: bool,
-    /// Input format
+    /// Input format of the input file or stdin
     #[arg(long, value_enum, default_value_t)]
     input: Input,
+    /// Output format to convert the jq output into
+    #[arg(long, value_enum, default_value_t)]
+    output: Output,
 
-    /// Inplace editing
+    /// Convert jq output to YAML (shortcut for --output=yaml)
+    #[arg(
+        short = 'y',
+        long,
+        default_value = "false",
+        conflicts_with = "toml_output",
+        conflicts_with = "output"
+    )]
+    yaml_output: bool,
+    /// Convert jq output to TOML (shortcut for --output=toml)
+    #[arg(
+        short = 't',
+        long,
+        default_value = "false",
+        conflicts_with = "yaml_output",
+        conflicts_with = "output"
+    )]
+    toml_output: bool,
+
+    /// Edit the input file in place
     #[arg(short, long, default_value = "false", requires = "file")]
     in_place: bool,
 
@@ -52,21 +77,21 @@ struct Args {
     file: Option<PathBuf>,
 
     // ----- jq arguments
-    /// Compact instead of pretty-printed output (json only)
+    /// Compact instead of pretty-printed output (jq output only)
     ///
     /// This is unlikely to work with yaml or toml output because it requires
     /// that the jq -c output is deserializable into the desired output format.
     #[arg(short = 'c', long, default_value = "false")]
     compact_output: bool,
 
-    /// Output strings without escapes and quotes (json only)
+    /// Output strings without escapes and quotes (jq output only)
     ///
     /// This is unlikely to work with yaml or toml output because it requires
     /// that the jq -r output is deserializable into the desired output format.
     #[arg(short = 'r', long, default_value = "false")]
     raw_output: bool,
 
-    /// Output strings without escapes and quotes, without newlines after each output (json only)
+    /// Output strings without escapes and quotes, without newlines after each output (jq output only)
     ///
     /// This is unlikely to work with yaml or toml output because it requires
     /// that the jq -r output is deserializable into the desired output format.
@@ -147,10 +172,33 @@ impl Args {
         let doc_as: serde_json::Value = doc.try_into()?;
         Ok(serde_json::to_vec(&doc_as)?)
     }
+    fn read_json(&mut self) -> Result<Vec<u8>> {
+        let json_value: serde_json::Value = if let Some(f) = &self.file {
+            if !std::path::Path::new(&f).exists() {
+                Self::try_parse_from(["cmd", "-h"])?;
+                std::process::exit(2);
+            }
+            let file = std::fs::File::open(f)?;
+            // NB: can do everything async (via tokio + tokio_util) except this:
+            // serde only has a sync reader interface, so may as well do all sync.
+            serde_json::from_reader(BufReader::new(file))?
+        } else if !stdin().is_terminal() && !cfg!(test) {
+            debug!("reading from stdin");
+            serde_json::from_reader(stdin())?
+        } else {
+            Self::try_parse_from(["cmd", "-h"])?;
+            std::process::exit(2);
+        };
+
+        // TODO: if slurp and json value is an array...
+
+        Ok(serde_json::to_vec(&json_value)?)
+    }
     fn read_input(&mut self) -> Result<Vec<u8>> {
         let ser = match self.input {
             Input::Yaml => self.read_yaml()?,
             Input::Toml => self.read_toml()?,
+            Input::Json => self.read_json()?,
         };
         debug!("input decoded as json: {}", String::from_utf8_lossy(&ser));
         Ok(ser)
@@ -182,17 +230,21 @@ impl Args {
 
     // print output either as yaml or json (as per jq output)
     fn output(&self, stdout: Vec<u8>) -> Result<String> {
-        if self.yaml_output {
-            // NB: this can fail - particularly if people use -r or work on multidoc
-            let val: serde_json::Value = serde_json::from_slice(&stdout)?;
-            let data = serde_yaml::to_string(&val)?.trim_end().to_string();
-            Ok(data)
-        } else if self.toml_output {
-            let val: serde_json::Value = serde_json::from_slice(&stdout)?;
-            Ok(toml::to_string(&val)?.trim_end().to_string())
-        } else {
-            // NB: stdout here is not always json - users can pass -r to jq
-            Ok(String::from_utf8_lossy(&stdout).trim_end().to_string())
+        match self.output {
+            Output::Yaml => {
+                // NB: this can fail - particularly if people use -r or work on multidoc
+                let val: serde_json::Value = serde_json::from_slice(&stdout)?;
+                let data = serde_yaml::to_string(&val)?.trim_end().to_string();
+                Ok(data)
+            }
+            Output::Toml => {
+                let val: serde_json::Value = serde_json::from_slice(&stdout)?;
+                Ok(toml::to_string(&val)?.trim_end().to_string())
+            }
+            Output::Jq => {
+                // NB: stdout here is not always json - users can pass -r to jq
+                Ok(String::from_utf8_lossy(&stdout).trim_end().to_string())
+            }
         }
     }
 }
@@ -208,6 +260,12 @@ fn init_env_tracing_stderr() -> Result<()> {
 fn main() -> Result<()> {
     init_env_tracing_stderr()?;
     let mut args = Args::parse();
+    // Capture shortcuts manually due to https://github.com/clap-rs/clap/issues/3146
+    if args.yaml_output {
+        args.output = Output::Yaml;
+    } else if args.toml_output {
+        args.output = Output::Toml
+    }
     debug!("args: {:?}", args);
     let input = args.read_input()?;
     let stdout = args.shellout(input)?;
