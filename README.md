@@ -22,7 +22,7 @@ cargo binstall whyq
 
 ## Features
 
-- arbitrary `jq` usage on yaml/toml/json input with the same syntax (args passed along to `jq` with json converted input)
+- arbitrary `jq` usage on yaml/toml/json input with the same syntax (same filter syntax, supports modules) by leveraging `jq` as an intermediate format
 - drop-in replacement to [python-yq](https://kislyuk.github.io/yq/) (e.g. provides: yq)
 - handles multidoc **yaml** input (vector of documents returned when multiple docs found)
 - handles [yaml merge keys](https://yaml.org/type/merge.html) and expands yaml tags (via `serde_yaml`)
@@ -119,6 +119,17 @@ Escaping keys with slashes etc in them:
 
 ```sh
 yq -y '.updates[] | select(.["package-ecosystem"] == "cargo") | .groups' .github/dependabot.yml
+```
+
+Using helpers from `jq` [modules](https://jqlang.github.io/jq/manual/):
+
+```sh
+$ yq 'include "k"; .[] | gvk' -r -L$PWD/test/modules < test/deploy.yaml
+v1.ServiceAccount
+rbac.authorization.k8s.io/v1.ClusterRole
+rbac.authorization.k8s.io/v1.ClusterRoleBinding
+v1.Service
+apps/v1.Deployment
 ```
 
 ## Output Caveats

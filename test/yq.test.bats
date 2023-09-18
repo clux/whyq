@@ -82,3 +82,8 @@
   run yq --input=json ".ingredients | keys" -c < test/guacamole.json
   echo "$output" && echo "$output" | grep '["avocado","coriander","cumin","garlic","lime","onions","pepper","salt","tomatoes"]'
 }
+
+@test "jq_modules" {
+  run yq 'include "k"; . | gvk' -r -L$PWD/test/modules < test/grafana.yaml
+  echo "$output" && echo "$output" | grep 'apps/v1.Deployment'
+}

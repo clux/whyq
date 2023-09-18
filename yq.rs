@@ -97,6 +97,10 @@ struct Args {
     /// that the jq -r output is deserializable into the desired output format.
     #[arg(short = 'j', long, default_value = "false")]
     join_output: bool,
+
+    /// Search jq modules from the directory
+    #[arg(short = 'L', default_value = "None")]
+    modules: Option<PathBuf>,
 }
 
 impl Args {
@@ -110,6 +114,10 @@ impl Args {
         }
         if self.join_output {
             args.push("-j".into());
+        }
+        if let Some(dir) = &self.modules {
+            args.push("-L".into());
+            args.push(format!("{}", dir.display()));
         }
         args
     }
