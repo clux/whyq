@@ -70,4 +70,5 @@
   run yq -yi '.kind = "Hahah"' test/grafana.yaml
   run yq -r .kind test/grafana.yaml
   echo "$output" && echo "$output" | grep "Hahah"
+  yq -yi '.kind = "Deployment"' test/grafana.yaml # undo
 }

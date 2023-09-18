@@ -213,7 +213,7 @@ fn main() -> Result<()> {
     let output = args.output(stdout)?;
     if args.in_place {
         let f = args.file.unwrap(); // required
-        std::fs::write(f, output)?;
+        std::fs::write(f, output + "\n")?;
     } else {
         println!("{}", output);
     }
