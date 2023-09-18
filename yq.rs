@@ -159,6 +159,7 @@ impl Args {
         };
         Ok(ser)
     }
+
     fn read_toml(&mut self) -> Result<Vec<u8>> {
         use toml::Table;
         let mut buf = String::new();
@@ -180,6 +181,7 @@ impl Args {
         let doc_as: serde_json::Value = doc.try_into()?;
         Ok(serde_json::to_vec(&doc_as)?)
     }
+
     fn read_json(&mut self) -> Result<Vec<u8>> {
         let json_value: serde_json::Value = if let Some(f) = &self.file {
             if !std::path::Path::new(&f).exists() {
@@ -187,8 +189,6 @@ impl Args {
                 std::process::exit(2);
             }
             let file = std::fs::File::open(f)?;
-            // NB: can do everything async (via tokio + tokio_util) except this:
-            // serde only has a sync reader interface, so may as well do all sync.
             serde_json::from_reader(BufReader::new(file))?
         } else if !stdin().is_terminal() && !cfg!(test) {
             debug!("reading from stdin");
@@ -197,11 +197,9 @@ impl Args {
             Self::try_parse_from(["cmd", "-h"])?;
             std::process::exit(2);
         };
-
-        // TODO: if slurp and json value is an array...
-
         Ok(serde_json::to_vec(&json_value)?)
     }
+
     fn read_input(&mut self) -> Result<Vec<u8>> {
         let ser = match self.input {
             Input::Yaml => self.read_yaml()?,
