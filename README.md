@@ -79,7 +79,24 @@ $ tq '.profile' -c < Cargo.toml
 {"release":{"lto":true,"panic":"abort","strip":"symbols"}}
 ```
 
-Add `alias tq='yq -i=toml'` to your `.bashrc` or `.zshrc` (etc) to make this permanent if you find it useful.
+Add `alias tq='yq --input=toml'` to your `.bashrc` or `.zshrc` (etc) to make this permanent if you find it useful.
+
+## JSON Input
+
+If you need to convert json to another format you pass `--input=json`:
+
+```sh
+$ yq --input=json '.ingredients | keys' -y < test/guacamole.json                                                                          ☸ production-eu-west-1󰛢monitoring
+- avocado
+- coriander
+- cumin
+- garlic
+- lime
+- onions
+- pepper
+- salt
+- tomatoes
+```
 
 ## Advanced Examples
 Select with nested query and raw output:
