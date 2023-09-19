@@ -107,7 +107,10 @@ struct Args {
 
 impl Args {
     fn jq_args(&self) -> Vec<String> {
-        let mut args = vec![self.jq_query.clone().unwrap_or_else(|| ".".into())];
+        let mut args = vec![];
+        if let Some(query) = &self.jq_query {
+            args.push(query.into())
+        }
         if self.compact_output {
             args.push("-c".into());
         }
