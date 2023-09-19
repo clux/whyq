@@ -87,3 +87,10 @@
   run yq 'include "k"; . | gvk' -r -L$PWD/test/modules < test/grafana.yaml
   echo "$output" && echo "$output" | grep 'apps/v1.Deployment'
 }
+
+@test "paramless" {
+  run yq -y <<< '["foo"]'
+  echo "$output" && echo "$output" | grep '\- foo'
+  run yq <<< '"bar"'
+  echo "$output" && echo "$output" | grep '"bar"'
+}
