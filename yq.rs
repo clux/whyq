@@ -69,8 +69,10 @@ struct Args {
     in_place: bool,
 
     /// Query to be sent to jq (see https://jqlang.github.io/jq/manual/)
+    ///
+    /// Default "."
     #[arg()]
-    jq_query: String,
+    jq_query: Option<String>,
 
     /// Optional file to read (instead of stdin) in the chosen --input format
     #[arg()]
@@ -105,7 +107,7 @@ struct Args {
 
 impl Args {
     fn jq_args(&self) -> Vec<String> {
-        let mut args = vec![self.jq_query.clone()];
+        let mut args = vec![self.jq_query.clone().unwrap_or_else(|| ".".into())];
         if self.compact_output {
             args.push("-c".into());
         }
@@ -292,7 +294,7 @@ mod test {
     fn file_input_both_outputs() -> Result<()> {
         init_env_tracing_stderr()?;
         let mut args = Args {
-            jq_query: ".[2].metadata".into(),
+            jq_query: Some(".[2].metadata".into()),
             compact_output: true,
             output: Output::Jq,
             file: Some("test/deploy.yaml".into()),

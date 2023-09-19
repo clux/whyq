@@ -47,7 +47,7 @@
     skip # ci is fun
   fi
   run yq
-  [ "$status" -eq 2 ]
+  [ "$status" -eq 1 ]
 }
 
 @test "toml" {
