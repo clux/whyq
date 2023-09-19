@@ -47,7 +47,7 @@
     skip # ci is fun
   fi
   run yq
-  [ "$status" -eq 2 ]
+  [ "$status" -eq 1 ]
 }
 
 @test "toml" {
@@ -86,4 +86,11 @@
 @test "jq_modules" {
   run yq 'include "k"; . | gvk' -r -L$PWD/test/modules < test/grafana.yaml
   echo "$output" && echo "$output" | grep 'apps/v1.Deployment'
+}
+
+@test "paramless" {
+  run yq -y <<< '["foo"]'
+  echo "$output" && echo "$output" | grep '\- foo'
+  run yq <<< '"bar"'
+  echo "$output" && echo "$output" | grep '"bar"'
 }
