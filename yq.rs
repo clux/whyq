@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{Parser, ValueEnum};
+use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use serde_yaml::{self, with::singleton_map_recursive, Deserializer};
 use std::io::{stderr, stdin, BufReader, IsTerminal, Read, Write};
 use std::path::PathBuf;
@@ -22,7 +22,17 @@ enum Output {
     Toml,
 }
 
-/// A lightweight and portable Rust implementation of a common jq wrapper
+#[derive(Clone, Copy, Debug, Subcommand)]
+#[command(args_conflicts_with_subcommands = true)]
+enum Sub {
+    #[command(about = "Generate completions", hide = true)]
+    Completions {
+        #[arg(help = "The shell to generate completions for")]
+        shell: clap_complete::Shell,
+    },
+}
+
+// A lightweight and portable jq wrapper
 ///
 /// Allows doing arbitrary jq style queries editing on YAML documents.
 ///
@@ -36,7 +46,10 @@ enum Output {
 ///
 /// yq -y '.[2].metadata' < manifest.yml
 #[derive(Parser, Debug, Default)]
-#[command(author, version, about)]
+#[command(
+    version = clap::crate_version!(),
+    author = "clux <sszynrae@gmail.com>",
+)]
 struct Args {
     /// Input format of the input file or stdin
     #[arg(long, value_enum, default_value_t)]
@@ -67,6 +80,10 @@ struct Args {
     /// Edit the input file in place
     #[arg(short, long, default_value = "false", requires = "file")]
     in_place: bool,
+
+    /// Hidden extras
+    #[command(subcommand)]
+    command: Option<Sub>,
 
     /// Query to be sent to jq (see https://jqlang.github.io/jq/manual/)
     ///
@@ -277,6 +294,16 @@ fn main() -> Result<()> {
     } else if args.toml_output {
         args.output = Output::Toml
     }
+    if let Some(command) = args.command {
+        match command {
+            Sub::Completions { shell } => {
+                let mut cmd = Args::command();
+                clap_complete::generate(shell, &mut cmd, "yq", &mut std::io::stdout());
+                return Ok(());
+            }
+        }
+    }
+
     debug!("args: {:?}", args);
     let input = args.read_input()?;
     let stdout = args.shellout(input)?;

@@ -153,6 +153,14 @@ apps/v1.Deployment
 Output formatting such as `-y` for YAML or `-t` for TOML will require the output from `jq` to be parseable json.
 If you pass on `-r`,`-c` or `-c` for raw/compact output, then this will generally not be parseable as json.
 
+## Autocomplete
+
+Autocompletion for most shells available via `yq completions`:
+
+```sh
+source <(yq completions bash)
+```
+
 ### Debug Logs
 
 The project respects `RUST_LOG` when set, and sends these diagnostic logs to stderr:
