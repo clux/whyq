@@ -41,7 +41,7 @@ cargo binstall whyq
 ### Limitations
 
 - Shells out to `jq` (supports what your `jq` version supports)
-- Does not preserve [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html) and then [apply_merged](https://docs.rs/serde_yaml/latest/serde_yaml/value/enum.Value.html#method.apply_merge) before `jq`)
+- Expands [YAML tags](https://yaml.org/spec/1.2-old/spec.html#id2764295) (input is [singleton mapped](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html) -> [recursively](https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map_recursive/index.html), then [merged](https://docs.rs/serde_yaml/latest/serde_yaml/value/enum.Value.html#method.apply_merge)) - so tags are [not preserved](https://github.com/clux/whyq/issues/12) in the output
 - Does not preserve indentation (unsupported in [serde_yaml](https://github.com/dtolnay/serde-yaml/issues/337))
 - Does not support [duplicate keys](https://github.com/clux/whyq/issues/14) in the input document
 - No XML/CSV support (or other more exotic formats)
