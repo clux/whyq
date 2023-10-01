@@ -22,7 +22,7 @@ path = "yq.rs"
 anyhow = "1.0.75"
 clap = { version = "4.4.4", features = ["cargo", "derive"] }
 serde_json = "1.0.107"
-toml = { version = "0.8.0", features = ["display"] }
+toml = { version = "0.8.1", features = ["display"] }
 serde_yaml = "0.9.25"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
