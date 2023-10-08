@@ -1,6 +1,7 @@
 # whyq - low overhead yq implementation
 [![CI](https://github.com/clux/yq/actions/workflows/release.yml/badge.svg)](https://github.com/clux/yq/actions/workflows/release.yml)
 [![Crates.io](https://img.shields.io/crates/v/whyq.svg)](https://crates.io/crates/whyq)
+[![dependency status](https://deps.rs/repo/github/clux/whyq/status.svg)](https://deps.rs/repo/github/clux/whyq)
 
 A lightweight and portable [jq](https://jqlang.github.io/jq/) wrapper for doing arbitrary queries from **YAML**/**TOML**/**JSON** documents by converting to **JSON** and passing to `jq`, then returning the result either as raw `jq` output, or back into TOML or YAML.
 
