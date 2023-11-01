@@ -251,20 +251,17 @@ impl Args {
             // Other outputs are speculatively parsed as the requested formats
             Output::Yaml => {
                 // handle multidoc from jq output (e.g. '.[].name' type queries on multidoc input)
-                let json_de = serde_json::Deserializer::from_slice(&stdout).into_iter::<serde_json::Value>();
-                let mut docs: Vec<serde_json::Value> = vec![];
-                for doc in json_de {
-                    docs.push(doc?);
-                }
+                let docs = serde_json::Deserializer::from_slice(&stdout)
+                    .into_iter::<serde_json::Value>()
+                    .flatten()
+                    .collect::<Vec<_>>();
                 debug!("parsed {} documents", docs.len());
                 let output = match docs.as_slice() {
                     [x] => serde_yaml::to_string(&x)?,
                     [] => serde_yaml::to_string(&serde_json::json!({}))?,
                     xs => serde_yaml::to_string(&xs)?,
-                }
-                .trim_end()
-                .to_string();
-                Ok(output)
+                };
+                Ok(output.trim_end().to_string())
             }
             Output::Toml => {
                 let val: serde_json::Value = serde_json::from_slice(&stdout)?;
