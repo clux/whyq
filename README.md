@@ -13,7 +13,7 @@ Via cargo:
 cargo install whyq
 ```
 
-or download a prebuilt from [releases](https://github.com/clux/yq/releases) either manually, or via [binstall](https://github.com/cargo-bins/cargo-binstall):
+or download a prebuilt from [releases](https://github.com/clux/whyq/releases) either manually, or via [binstall](https://github.com/cargo-bins/cargo-binstall):
 
 ```sh
 cargo binstall whyq
@@ -103,7 +103,7 @@ Add `alias tq='yq --input=toml'` to your `.bashrc` or `.zshrc` (etc) to make thi
 If you need to convert json to another format you pass `--input=json`:
 
 ```sh
-$ yq --input=json '.ingredients | keys' -y < test/guacamole.json                                                                          ☸ production-eu-west-1󰛢monitoring
+$ yq --input=json '.ingredients | keys' -y < test/guacamole.json
 - avocado
 - coriander
 - cumin
