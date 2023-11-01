@@ -94,3 +94,8 @@
   run yq <<< '"bar"'
   echo "$output" && echo "$output" | grep '"bar"'
 }
+
+@test "multidoc-jq-output-to-yaml" {
+  run yq '.[].metadata.labels' -y test/deploy.yaml
+  echo "$output" && echo "$output" | rg -U '\- null\n- null\n- null\n- app: controller\n- app: controller'
+}

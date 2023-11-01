@@ -242,19 +242,30 @@ impl Args {
     // print output either as yaml or json (as per jq output)
     fn output(&self, stdout: Vec<u8>) -> Result<String> {
         match self.output {
+            // Only jq output is guaranteed to succeed because it's not parsed as a format
+            // if people pass -r to jq, then this can strip formats
+            Output::Jq => {
+                // NB: stdout here is not always json - users can pass -r to jq
+                Ok(String::from_utf8_lossy(&stdout).trim_end().to_string())
+            }
+            // Other outputs are speculatively parsed as the requested formats
             Output::Yaml => {
-                // NB: this can fail - particularly if people use -r or work on multidoc
-                let val: serde_json::Value = serde_json::from_slice(&stdout)?;
-                let data = serde_yaml::to_string(&val)?.trim_end().to_string();
-                Ok(data)
+                // handle multidoc from jq output (e.g. '.[].name' type queries on multidoc input)
+                let docs = serde_json::Deserializer::from_slice(&stdout)
+                    .into_iter::<serde_json::Value>()
+                    .flatten()
+                    .collect::<Vec<_>>();
+                debug!("parsed {} documents", docs.len());
+                let output = match docs.as_slice() {
+                    [x] => serde_yaml::to_string(&x)?,
+                    [] => serde_yaml::to_string(&serde_json::json!({}))?,
+                    xs => serde_yaml::to_string(&xs)?,
+                };
+                Ok(output.trim_end().to_string())
             }
             Output::Toml => {
                 let val: serde_json::Value = serde_json::from_slice(&stdout)?;
                 Ok(toml::to_string(&val)?.trim_end().to_string())
-            }
-            Output::Jq => {
-                // NB: stdout here is not always json - users can pass -r to jq
-                Ok(String::from_utf8_lossy(&stdout).trim_end().to_string())
             }
         }
     }
