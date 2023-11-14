@@ -20,7 +20,7 @@ path = "yq.rs"
 
 [dependencies]
 anyhow = "1.0.75"
-clap = { version = "4.4.7", features = ["cargo", "derive"] }
+clap = { version = "4.4.8", features = ["cargo", "derive"] }
 serde_json = "1.0.108"
 toml = { version = "0.8.8", features = ["display"] }
 serde_yaml = "0.9.27"
