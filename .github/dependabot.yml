@@ -4,11 +4,15 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    labels:
+      - "exclude"
 
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "monthly"
+    labels:
+      - "dependencies"
     groups:
       serde:
         patterns:
