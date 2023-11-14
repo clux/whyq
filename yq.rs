@@ -65,7 +65,7 @@ struct Args {
     toml_output: bool,
 
     /// Edit the input file in place
-    #[arg(short, long, default_value = "false", requires = "file")]
+    #[arg(short, long, default_value = "false")]
     in_place: bool,
 
     /// Query to be sent to jq (see https://jqlang.github.io/jq/manual/)
@@ -292,7 +292,7 @@ fn main() -> Result<()> {
     let input = args.read_input()?;
     let stdout = args.shellout(input)?;
     let output = args.output(stdout)?;
-    if args.in_place {
+    if args.in_place && args.file.is_some() {
         let f = args.file.unwrap(); // required
         std::fs::write(f, output + "\n")?;
     } else {
