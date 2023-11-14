@@ -14,12 +14,6 @@ updates:
     labels:
       - "dependencies"
     groups:
-      serde:
-        patterns:
-          - serde
-          - serde_*
-          - serde-*
-          - toml
       rust:
         patterns:
           - "*"
