@@ -38,6 +38,12 @@
   rm test/output.json
 }
 
+@test "yq_in_place_edit" {
+  cat test/secret.yaml |  yq -i '.metadata.name="updated-name"' > test/output.yaml
+  cat test/output.yaml | yq '.metadata.name' | grep 'updated-name'
+  rm test/output.yaml
+}
+
 @test "exit_codes" {
   run yq -h
   [ "$status" -eq 0 ]
