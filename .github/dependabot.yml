@@ -20,16 +20,6 @@ updates:
           - serde_*
           - serde-*
           - toml
-      misc:
+      rust:
         patterns:
-          - anyhow
-          - thiserror
-          - tracing
-          - tracing*
-          - log
-          - env_logger
-      clap:
-        patterns:
-          - clap
-          - clap-*
-          - clap_*
+          - "*"
