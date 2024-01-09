@@ -142,7 +142,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: builds
+          name: builds-${{ matrix.target }}
           retention-days: 1
           path: |
             yq-*.tar.xz
@@ -166,7 +166,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: builds
+          pattern: builds-*
+          merge-multiple: true
 
       - name: Checksums with SHA512
         run: sha512sum yq-* | tee SHA512SUMS
