@@ -296,7 +296,9 @@ fn main() -> Result<()> {
         let f = args.file.unwrap(); // required
         std::fs::write(f, output + "\n")?;
     } else {
-        println!("{}", output);
+        // write result to stdout ignoring SIGPIPE errors
+        // https://github.com/rust-lang/rust/issues/46016
+        let _ = writeln!(std::io::stdout(), "{output}");
     }
     Ok(())
 }
