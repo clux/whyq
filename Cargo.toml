@@ -30,6 +30,9 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 [profile.release]
 lto = true
 panic = "abort"
+
+[profile.dev]
+debug = 0
 #strip = "symbols"
 
 [package.metadata.binstall]
