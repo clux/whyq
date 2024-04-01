@@ -19,11 +19,11 @@ name = "yq"
 path = "yq.rs"
 
 [dependencies]
-anyhow = "1.0.80"
-clap = { version = "4.5.1", features = ["cargo", "derive"] }
-serde_json = "1.0.114"
-toml = { version = "0.8.10", features = ["display"] }
-serde_yaml = "0.9.32"
+anyhow = "1.0.81"
+clap = { version = "4.5.4", features = ["cargo", "derive"] }
+serde_json = "1.0.115"
+toml = { version = "0.8.12", features = ["display"] }
+serde_yaml = "0.9.34"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
