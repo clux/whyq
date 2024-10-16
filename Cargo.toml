@@ -15,7 +15,7 @@ categories = ["command-line-utilities", "parsing"]
 
 [[bin]]
 doc = false
-name = "yq"
+name = "whyq"
 path = "yq.rs"
 
 [dependencies]
